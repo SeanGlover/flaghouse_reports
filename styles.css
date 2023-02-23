@@ -1,0 +1,207 @@
+details[open] summary ~ * {
+    animation: open 0.9s ease-in-out;
+} 
+details summary::-webkit-details-marker {
+    display: none;
+}
+details summary {
+    width: 50%;
+/* border-top: 1px solid black; */
+    position: relative;
+    cursor: pointer;
+    font-size: 1.25rem;
+    font-weight: bold;
+    font-weight: 300;
+    list-style: none;
+    display: flex;    
+    border-radius: 5px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, .05);
+    border-left: 15px solid gray;
+    padding: 15px;
+    margin-top: 15px;
+    outline: 0;
+    margin-left: 20px;
+}
+details summary:after {
+    content: "+";
+    color: rgb(70, 46, 103);
+    position: relative;
+    font-size: 6rem;
+    height: 30px;
+    line-height: 30px;
+    right: 7;
+    font-weight: bold;
+    font-weight: 300;
+    transform-origin: center;
+    transition: 100ms linear;
+}
+details[open] summary:after {
+    transform: rotate(45deg);
+    font-size: 6rem;
+}
+details p {
+    font-size: 0.95rem;
+    padding-top: 1rem;
+}
+
+body {
+    margin: 0;
+    font-family: 'Raleway', 'Open Sans', sans-serif;
+    background: #efefef;
+}
+
+section {
+    padding-top: 2rem;
+    width: 100%;
+    margin: auto;
+}
+hr {
+    clear: both;
+    margin-bottom: 3px;
+    margin-top: 3px;
+}
+
+h1, h2, h3, p {
+    font-family: 'Raleway', 'Roboto', sans-serif;
+    font-weight: normal;
+}
+h1 {
+    font-size: 48px;
+}
+h2 {
+    margin-bottom: 0px;
+}
+
+label {
+    font-size: 18px;
+    margin: 0px;
+    color:cornflowerblue;
+    font-weight: bold;
+}
+
+p {
+    font-size: 18px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.flex-fill.list-group-item {
+    min-height: 30px;
+}
+
+input{
+    border: none;
+    border-bottom: 1px solid rgba(0,0,0,.12);
+    font-size: 14px;
+    background: 0 0;
+    text-align: left;
+    color: inherit;
+}
+
+.input-group-append {
+    cursor: pointer;
+}
+.input-group-text {
+    background-color: gainsboro;
+    margin: 0px;
+    padding: 8px;
+}
+th {
+    text-align: center; /* Or right or left */
+}
+textarea {
+    resize: none;
+    overflow: hidden;
+    min-height: 50px;
+    max-height: 300px;
+}
+.card {
+    width: 380px;
+    border: none;
+    height: 280px;
+}
+button.clicked{
+    background-color: rgb(60, 67, 154);
+    border-color: rgb(60, 67, 154);
+    color: white;
+    outline-color: rgb(60, 67, 154);
+}
+.button-success {
+    color: white;
+    border-radius: 4px;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+    background: rgb(28, 184, 65);
+}
+.button-xlarge {
+    font-size: 125%;
+}
+.honeypot-field {
+    display: none;
+}
+
+.wrapper {  
+margin-top: 30px;
+margin-bottom: 30px;
+}
+
+.form-signin {
+    max-width: 380px;
+    padding: 15px 35px 45px;
+    margin: 0 auto;
+    background-color: #fff;
+    border-top: 1px solid rgba(0,0,0,0.08);
+    border-right: 1px solid rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(0,0,0,0.12);
+    border-left: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 3rem 5rem -2rem rgba(0, 0, 0, 0.2);
+}
+
+.form-control {
+    font-size: 16px;
+    padding: 10px;
+    box-sizing: border-box;
+    height: auto;
+    border-radius: 1px;
+}
+/* enable absolute positioning */
+.inner-addon { 
+    position: relative;
+}
+
+/* style icon */
+.inner-addon .glyphicon {
+    position: absolute;
+    top: 26px;
+    padding: 14px 30px 14px 20px;
+    background-color: rgba(0,0,0,0.05);
+    pointer-events: none;
+    border-right: 1px solid rgba(0,0,0,0.1);
+}
+
+/* align icon */
+.left-addon .glyphicon  { left:  0px;}
+
+/* add padding  */
+.left-addon input  { padding-left:  6px; }
+
+.form-signin input {
+    margin-bottom:15px;
+    height:44px;
+}
+
+.form-signin .forgot-password {
+    display: block;
+    padding-top:2px;
+    padding-bottom:2px;
+    margin-top:-8px;
+    margin-bottom:30px;
+    font-size:12px;
+}
+
+.account-signup {
+    max-width: 380px;
+    padding: 15px 35px;
+    margin: 0 auto;
+    background-color: rgba(0,0,0,0.1);
+}  
