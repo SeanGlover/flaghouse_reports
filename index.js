@@ -30,6 +30,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  updateDoc,
   where
 } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js' // https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js 'firebase/firestore';
 
@@ -40,10 +41,12 @@ const db = getFirestore(app);
 const wrapperSignin = document.getElementById('wrapper-signin');
 const sectionReports = document.getElementById('sectionReports');
 const detailsTemplate = document.getElementById('detailsTemplate');
-const signinUsr = document.getElementById('creds_id');
-const signinPwd = document.getElementById('creds_pwd');
 const signinBtn = document.getElementById('signin');
 const signoutBtn = document.getElementById('signout');
+
+// use these later to determine what level of access a viewer has
+const signinUsr = document.getElementById('creds_id');
+const signinPwd = document.getElementById('creds_pwd');
 var form = document.getElementById("signinForm");
 
 var currentUser = null;
@@ -59,7 +62,6 @@ async function main() {
     });
     signinBtn.addEventListener("click", signinClicked);
     signoutBtn.addEventListener("click", signoutFirebase);
-
     // signoutFirebase();
     autoSignOutComplete = true;
   });
@@ -87,9 +89,6 @@ async function main() {
           initialReportsLoad();
           // subscribeReportIteration();
 
-          //const docRef = doc(db, "cities", "SF");
-    
-          
           // add new JSON file to reports collection
           // true | false [Jules Leger, Beaubien, Centre Le Cap]
     
@@ -140,25 +139,79 @@ async function main() {
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach((doc) => {
       console.log(doc.id, " => ", doc.data());
-      updateReports(doc);
+      if(doc.id != 'Centre Le Cap') {
+        updateReportHTML(doc);
+      }
     });
     window.scrollTo(0, document.body.scrollHeight);
   }
 
-  async function updateReports(doc) {
+  async function updateReportHTML(queryDoc) {
 
     var clone = detailsTemplate.cloneNode(true);
-    var docData = doc.data();
+    var docData = queryDoc.data();
     var notes = docData.Notes;
     var job = docData.Job;
     var products = docData.Products;
     var contactInfo = docData.ContactInfo;
     var contactAddress = contactInfo.Address;
     var businessName = contactInfo.Organisation;
-    businessName = businessName.replace(/\s{2,}/g, ' ').trim();
-    clone.id = businessName.replace(' ', '-');
     var summaryClone = clone.getElementsByTagName('summary')[0];
+
+    businessName = businessName.replace(/\s{2,}/g, ' ').trim();
     summaryClone.innerHTML = businessName;
+    clone.id = queryDoc.id;
+
+    var submitBtn = clone.querySelector("#submitForm");
+    submitBtn.style = 'background-color: #55acee; padding: 10px 30px 10px 30px;';
+    submitBtn.addEventListener('click', function(e) {
+
+      var dict = {};      
+      var rows = clone.querySelector("#starsByCategory").querySelectorAll("tr");
+      for (var rw = 0; rw < rows.length; rw++) {
+        var sumStars = 0;
+        var row20 = rows[rw];
+        var stars = row20.querySelectorAll("img");
+        for (var str = 0; str < stars.length; str++) {
+          var star = stars[str];
+          var ehf = star.getAttribute('src').split('/')[1].split('.')[0].replace('star', '');
+          var starValue = ehf == 'Fill' ? 1 : ehf == 'Half' ? .5 : 0;
+          sumStars += starValue;
+        }
+        var description = null;
+        if(row20.querySelector('input') == null) {
+          description = row20.querySelector('td').innerHTML;
+        }
+        else {
+          description = row20.querySelector('input').value.trim();
+          if(description == '') { description = 'optionalInput'}
+        }
+        dict[description] = sumStars;
+      }
+
+      const feedback = {
+        "ClientResponse": {
+          "Submitter": clone.querySelector("#clientSignature").value,
+          "Date": new Date(),
+          "Submited": true,
+          "Feedback": {
+            "stars": dict,
+            "comments": clone.querySelector("#clientComments").value
+          }
+        }
+      };
+      const destDoc = doc(db, 'reports', queryDoc.id);
+      setDoc(destDoc, feedback, { merge:true })
+      .then(destDoc => {
+          console.log(`Document updated successfully`);
+          submitBtn.style = 'background-color: #32CD32; padding: 10px 30px 10px 30px;';
+      })
+      .catch(error => {
+          console.log(error);
+          submitBtn.style = 'background-color: red; padding: 10px 30px 10px 30px;'
+      })
+
+    });
 
     var docDate = docData.Document.Date;
     clone.querySelector("#businessName").setAttribute("value", businessName);
@@ -181,10 +234,18 @@ async function main() {
     clone.querySelector("#startDate").setAttribute("value", job.Start.split('T')[0]);
     clone.querySelector("#endDate").setAttribute("value", job.End.split('T')[0]);
 
-    var clientSubmittedForm = false;
-    clone.querySelector("#submitForm").disabled = clientSubmittedForm;
-    // success shows as green ( can still be submitted ), while '' is grey ( already submitted, and can't be now )
-    clone.querySelector("#submitForm").className = `button${clientSubmittedForm ? '' : '-success'} pure-button button-xlarge`;
+    var clientResponse = docData.ClientResponse;
+    var submitWarning = clone.querySelector("#submitWarning");
+    if(clientResponse == null) {
+      submitWarning.style.display = 'none';
+    }
+    else {
+      submitWarning.style.display = 'block';
+      var tmstmp = new Date(clientResponse.Date.seconds * 1000).toString();
+      var match = /20[0-9]{2} [0-2][0-9]:[0-5][0-9]:[0-5][0-9]/g.exec(tmstmp);
+      var matchString = tmstmp.substr(0, match.index + match[0].length);
+      submitWarning.innerText = `Submitted ${matchString} ... submit agian (overwrite)?`;
+    }
 
     summaryClone.style.borderLeft = '15px solid grey';
     clone.style = "display: block";
@@ -215,7 +276,6 @@ async function main() {
       var serialText = '<strong>' + (product.Serials.length == 1 ? 'serial# ' + product.Serials[0] : `serials: [${productSerials}]`) + '</strong>';
       var cellText = `${product.Code} ${product.Description} ${serialText}`.trim();
       rxcySetCellText(clone, rc, cellText);
-      console.log(rc);
     };
     // ... in the trained section (products), show only products marked as Trained: true
     var trainedProducts = products.filter(function (product) {
@@ -232,11 +292,9 @@ async function main() {
       }
       var cellText = `${product.Code} ${product.Description}`.trim();
       rxcySetCellText(clone, rc, cellText);
-      console.log(rc);
     };
     // ... the trained staff section is populated with a list from the docData.TrainedStaff
     rxcySetCellText(clone, 'r1c1_trainedStaff', docData.TrainedStaff.join(', '));
-
   }
 
 // misc functions
@@ -274,6 +332,24 @@ async function main() {
     var docCell = clonedReport.querySelector("#" + rxcy);
     docCell.setAttribute('id', guidId);
     document.getElementById(guidId).innerHTML = text;
+  }
+  async function copyFirestore() {
+
+    /////////////// from query -> doc ??
+    const destDoc = doc(db, 'reports', 'Ll62xGQgTNfODmdwWBse'); // new
+    const q = query(collection(db, 'reports'), where('ContactInfo.Organisation', "==", 'Centre Le Cap'));
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((srcDoc) => {
+      console.log(srcDoc.id, ' => ', srcDoc.data());
+      setDoc(destDoc, srcDoc.data(), { merge:true })
+      .then(destDoc => {
+          console.log(`Document copied successfully`);
+      })
+      .catch(error => {
+          console.log(error);
+      })
+    });
+
   }
 }
 main();
