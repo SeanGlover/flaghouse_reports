@@ -31,7 +31,8 @@ import {
   getDoc,
   setDoc,
   updateDoc,
-  where
+  where,
+  documentId
 } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js' // https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js 'firebase/firestore';
 
 const auth = getAuth(app);
@@ -86,7 +87,13 @@ async function main() {
         if (signedIn) {
           console.log(`user ${currentUser.uid} successfully signed in at ${new Date()}`);
           // signinBtn.removeEventListener("click", signinClicked);
+          // determine access level in initialReportsLoad() so that 0, 1 or more reports are loaded
+
+          // userConfigs(); // <-- add new users
+
           initialReportsLoad();
+
+          ///////// realtime updates
           // subscribeReportIteration();
 
           // add new JSON file to reports collection
@@ -102,7 +109,8 @@ async function main() {
     }
   });
   async function signinClicked() {
-    const signin = await signInWithEmailAndPassword(auth, 'seanglover.spg@gmail.com', 'fd727236-6e61-4f6d-aa48-61c5e6ef514d')
+    
+    const signin = await signInWithEmailAndPassword(auth, signinUsr.value, signinPwd.value)
     .then((userCredential) => {
       // ....... do something
 
@@ -134,19 +142,44 @@ async function main() {
     }
   }
   async function initialReportsLoad() {
+
     resetSectionReports();
-    const q = query(collection(db, 'reports'), where('ContactInfo', "!=", ''));
-    const querySnapshot = await getDocs(q);
-    querySnapshot.forEach((doc) => {
-      console.log(doc.id, " => ", doc.data());
-      if(doc.id != 'Centre Le Cap') {
-        updateReportHTML(doc);
+    let accessByUser = [];
+    const access = query(collection(db, 'access'));
+    const accessSnapshot = await getDocs(access);
+    accessSnapshot.forEach((doc) => {
+      var docData = doc.data();
+      var users = docData.Users;
+      for (var u = 0; u < users.length; u++) {
+        var user = users[u];
+        accessByUser[user.Id] = user.Access;
       }
     });
-    window.scrollTo(0, document.body.scrollHeight);
+
+    var signedInUser_hasProfile = auth.currentUser.uid in accessByUser;
+    if(signedInUser_hasProfile) {
+      var userAccess = accessByUser[auth.currentUser.uid];
+      var accessLvl = userAccess.Permission;
+      if(accessLvl >= 1) {
+        // 0 = none, 1 = read, 2 = write
+        // now get a list of reports to which the user has access
+        // either user has access to a partial list or a full list - none doesn't get here
+        var reports = collection(db, 'reports');
+        var some = userAccess.ReportIds.length != 0;
+        const q = some ? query(reports, where(documentId(), 'in', userAccess.ReportIds)) : query(reports);
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach((doc) => {
+          if(userAccess.ReportIds.length == 0 | userAccess.ReportIds.includes(doc.id)) {
+            console.log(doc.id, " => ", doc.data());
+            updateReportHTML(doc, false);
+          }
+        });
+        // window.scrollTo(0, document.body.scrollHeight);
+      }
+    }
   }
 
-  async function updateReportHTML(queryDoc) {
+  async function updateReportHTML(queryDoc, openReport) {
 
     var clone = detailsTemplate.cloneNode(true);
     var docData = queryDoc.data();
@@ -250,7 +283,7 @@ async function main() {
     summaryClone.style.borderLeft = '15px solid grey';
     clone.style = "display: block";
     sectionReports.appendChild(clone);
-    clone.open = true; // set this programatically
+    clone.open = openReport; // show (or not) the section - if report.count == 1 --> open, otherwise user clicks to open
 
     // do this ONLY after visible... otherwise error!
     await delay(1);
@@ -349,6 +382,53 @@ async function main() {
           console.log(error);
       })
     });
+
+  }
+  async function userConfigs() {
+
+    const destDoc = doc(db, 'access', 'b9NbHHku509AEMHjF6Kw'); // update
+    var currentAccesses = {
+      "Users": [
+        {
+          "Id": "A4fQrSN1OaNsTBP966dRGPM31ZX2",
+          "Access": {
+            "Permission": 2,
+            "ReportIds": []
+          }
+        },
+        {
+          "Id": "GjicU8Ixl7b3GGV9Tn1nEyyKtD03",
+          "Access": {
+            "Permission": 1,
+            "ReportIds": []
+          }
+        },
+        {
+          "Id": "b9qSXlPWDhYnoXRKGq1qv34arEM2",
+          "Access": {
+            "Permission": 1,
+            "ReportIds": []
+          }
+        },
+        {
+          "Id": "YY5jIJ8NpgNiXVYn92fW72igNNM2",
+          "Access": {
+            "Permission": 1,
+            "ReportIds": [
+              "Ll62xGQgTNfODmdwWBse",
+              "Centre Le Cap"
+            ]
+          }
+        }
+      ]
+    };
+    setDoc(destDoc, currentAccesses, { merge:true })
+    .then(destDoc => {
+        console.log(`Document copied successfully`);
+    })
+    .catch(error => {
+        console.log(error);
+    })
 
   }
 }
