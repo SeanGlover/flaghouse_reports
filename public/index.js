@@ -86,24 +86,20 @@ async function main() {
       if(autoSignOutComplete) {
         if (signedIn) {
           console.log(`user ${user.uid} successfully signed in at ${new Date()}`);
-          // signinBtn.removeEventListener("click", signinClicked);
-          // determine access level in initialReportsLoad() so that 0, 1 or more reports are loaded
-
-          // userConfigs(); // <-- add new users
+          userConfigs(); // <-- add new users
 
           initialReportsLoad();
-
-          ///////// realtime updates
-          // subscribeReportIteration();
-
-          // add new JSON file to reports collection
-          // true | false [Jules Leger, Beaubien, Centre Le Cap]
+          ///////// start realtime updates
+          subscribeReportIteration();
     
         } else {
           console.log(`user ${currentUser.uid} successfully signed out at ${new Date()}`);
           wrapperSignin.style.display = 'block';
-            // unsubscribeReportIteration();
-    
+          ///////// stop realtime updates
+          if (reportsListener != null) {
+            reportsListener();
+            reportsListener = null;
+          }
         }
       }
       currentUser = user;
@@ -137,15 +133,19 @@ async function main() {
     });
 
   }
-
   function resetSectionReports() {
-    var childrenReports = sectionReports.getElementsByTagName('details');
-    for (var i=0, item; item = childrenReports[i]; i++) {
-      if(item.id != 'detailsTemplate') {
-        sectionReports.removeChild(item);
+
+    $(document).ready(function() {
+
+      var detailsReports = document.getElementsByTagName('details');
+      for (var i = 0, item; item = detailsReports[i]; i++) {
+        if(item.style.display == 'block') {
+          document.getElementById('sectionReports').removeChild(item);
+        }
       }
-      // else { sectionReports.display = 'block'; }
-    }
+      
+    });
+
   }
   async function initialReportsLoad() {
 
@@ -170,8 +170,6 @@ async function main() {
     if(signedInUser_hasProfile) {
       var userAccess = accessByUser[auth.currentUser.uid];
       var accessToAll = userAccess.ReportIds.length == 0;
-      var accessIds = accessToAll ? 'all' : userAccess.ReportIds.join('|');
-      console.log(accessIds);
       var accessLvl = userAccess.Permission;
       if(accessLvl >= 1) {
         // 0 = none, 1 = read, 2 = write
@@ -196,18 +194,21 @@ async function main() {
       }
     }
   }
-  function subscribeReportIteration() {
+  async function subscribeReportIteration() {
 
+    resetSectionReports();
     const q = query(collection(db, 'reports'), orderBy('Document.Date', 'desc'));
-    reportsListener = onSnapshot(q, snaps => {
+    reportsListener = await onSnapshot(q, snaps => {
       snaps.forEach(doc => {
-
+        // updateReportHTML(doc, false);
       });
+      initialReportsLoad();
     });
 
   }
-
   async function updateReportHTML(queryDoc, openReport) {
+
+    if(document.getElementById(queryDoc.id) != null) return;
 
     var clone = detailsTemplate.cloneNode(true);
     var docData = queryDoc.data();
@@ -356,6 +357,7 @@ async function main() {
     };
     // ... the trained staff section is populated with a list from the docData.TrainedStaff
     rxcySetCellText(clone, 'r1c1_trainedStaff', docData.TrainedStaff.join(', '));
+
   }
 
 // misc functions
@@ -371,6 +373,7 @@ async function main() {
     });
   }
   function textareaSetText(clonedReport, id, text) {
+
     var guidId = `${id}_${createGUID()}`;
     clonedReport.querySelector("#" + id).setAttribute("id", guidId);
     // using document.getElementById does NOT work!
@@ -379,20 +382,32 @@ async function main() {
     
     // ... but JQuery does!
     var textarea = $('#' + guidId);
-    textarea.val(text.replaceAll('■', '\n'));
-    textarea.css('height', `${textarea.get(0).scrollHeight}px`);
+    if(textarea != null) {
+      try {
+        textarea.val(text.replaceAll('■', '\n'));
+        textarea.css('height', `${textarea.get(0).scrollHeight}px`);
+      }
+      catch {}
+    }
+
   }
   function optionSet(clonedReport, id, selectedIndex) {
+
     var options = clonedReport.querySelector('#' + id).children;
     options.selectedIndex = -1;
     var option = options[selectedIndex + 1];
     clonedReport.querySelector(`#${option.id}`).setAttribute("selected", "\"\"");
+
   }
   function rxcySetCellText(clonedReport, rxcy, text) {
+
     var guidId = `${rxcy}_${createGUID()}`;
     var docCell = clonedReport.querySelector("#" + rxcy);
-    docCell.setAttribute('id', guidId);
-    document.getElementById(guidId).innerHTML = text;
+    if(docCell != null) {
+      docCell.setAttribute('id', guidId);
+      docCell.innerHTML = text;
+    }
+
   }
 
   async function copyFirestore() {
@@ -413,7 +428,6 @@ async function main() {
     });
 
   }
-
   async function userConfigs() {
 
     const destDoc = doc(db, 'access', 'b9NbHHku509AEMHjF6Kw'); // update
@@ -455,6 +469,15 @@ async function main() {
             "Permission": 1,
             "ReportIds": [
               "Ll62xGQgTNfODmdwWBse"
+            ]
+          }
+        },
+        {
+          "Id": "0vN2c6B9pzgnKa3bYeP7nbVjjyf2",
+          "Access": {
+            "Permission": 1,
+            "ReportIds": [
+              "P9uiMYRAPjXZziB4f9hq"
             ]
           }
         }
