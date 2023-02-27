@@ -48,10 +48,11 @@ const signoutBtn = document.getElementById('signout');
 // use these later to determine what level of access a viewer has
 const signinUsr = document.getElementById('creds_id');
 const signinPwd = document.getElementById('creds_pwd');
-var form = document.getElementById("signinForm");
+var form = document.getElementById("signinForm"); // work on this when submitted a message appears... thanks!
 
 var currentUser = null;
 var autoSignOutComplete = false;
+let reportsListener = null;
 
 async function main() {
 
@@ -156,6 +157,10 @@ async function main() {
       }
     });
 
+    // addReport('Ll62xGQgTNfODmdwWBse', lecap);
+    // addReport('7AJmtUU3ypXSlNhqYVch', panama);
+    // addReport('P9uiMYRAPjXZziB4f9hq', beaubien);
+
     var signedInUser_hasProfile = auth.currentUser.uid in accessByUser;
     if(signedInUser_hasProfile) {
       var userAccess = accessByUser[auth.currentUser.uid];
@@ -166,7 +171,7 @@ async function main() {
         // either user has access to a partial list or a full list - none doesn't get here
         var reports = collection(db, 'reports');
         var some = userAccess.ReportIds.length != 0;
-        const q = some ? query(reports, where(documentId(), 'in', userAccess.ReportIds)) : query(reports);
+        const q = query(reports, some ? where(documentId(), 'in', userAccess.ReportIds) : where('Document.Date', '!=', ''), orderBy('Document.Date', 'desc'));
         const querySnapshot = await getDocs(q);
         querySnapshot.forEach((doc) => {
           if(userAccess.ReportIds.length == 0 | userAccess.ReportIds.includes(doc.id)) {
@@ -177,6 +182,16 @@ async function main() {
         // window.scrollTo(0, document.body.scrollHeight);
       }
     }
+  }
+  function subscribeReportIteration() {
+
+    const q = query(collection(db, 'reports'), orderBy('Document.Date', 'desc'));
+    reportsListener = onSnapshot(q, snaps => {
+      snaps.forEach(doc => {
+
+      });
+    });
+
   }
 
   async function updateReportHTML(queryDoc, openReport) {
@@ -425,6 +440,618 @@ async function main() {
     setDoc(destDoc, currentAccesses, { merge:true })
     .then(destDoc => {
         console.log(`Document copied successfully`);
+    })
+    .catch(error => {
+        console.log(error);
+    })
+
+  }
+
+  const panama =
+  {
+    "Document": {
+      "Date": "2023-02-26T15:33:02.5631732-05:00",
+      "Language": 2
+    },
+    "Job": {
+      "Type": 0,
+      "OrderNbr": "P0921594",
+      "Start": "2023-02-26T15:33:01.7649786-05:00",
+      "End": "2023-02-26T15:33:01.7649786-05:00",
+      "Completed": false
+    },
+    "ContactInfo": {
+      "Organisation": "Fundacíon Simjati",
+      "Name": "Tamy Tesone",
+      "Title": "Program and services coordinator",
+      "Email": "direccion@simjati.org",
+      "Phone": "+507 6672-9198‬",
+      "Website": "https://www.simjaticlub.com",
+      "Address": {
+        "Street": "Residencia 55, Calle 81 Este, Altos del Golf, San Francisco, Corregimiento de Parque Lefevre",
+        "City": "Panama City",
+        "Province": 10,
+        "Country": "Panama",
+        "Code": ""
+      }
+    },
+    "Products": [
+      {
+        "Source": 2,
+        "Code": "1795",
+        "Description": "SOFTROCKER BLUE/TEAL",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "20698R",
+        "Description": "WATER TREATMENT FLUID BCB",
+        "Quantity": 4,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "20878R",
+        "Description": "WIFI LED SPOTLIGHT",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "21098RO",
+        "Description": "SENSORY MAGIC",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "21507",
+        "Description": "AURA LED PROJECTOR",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "22869R",
+        "Description": "MULTIFINITY EXPLORER",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "22873R",
+        "Description": "COLOUR CATCH COMBO",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "31053MAG",
+        "Description": "FOREST EFFECT WHEEL MAGNETIC",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "32401",
+        "Description": "FIBER OPTIC LIGHT ENCLOSURE",
+        "Quantity": 2,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "34280MAG",
+        "Description": "WILDERNESS EFFECT WHEEL MAGNETIC",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "37969",
+        "Description": "LASER STARS PROJECTOR",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "38967",
+        "Description": "OPTIMUSIC 8-BEAM UNIT W/COMPUTER PFA NF9",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "39005",
+        "Description": "DIAMOND BUBBLE WALL NF7",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "39019",
+        "Description": "CUSTOM ACRYLIC MIRROR 96X48 IN OML",
+        "Quantity": 3,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "39043MAG",
+        "Description": "WHALES WHEEL NS8 MAGNETIC",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "39046MAG",
+        "Description": "ORGANIC WHEEL MAGNETIC",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "39061",
+        "Description": "AROMA SENSORY KIT",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "39076",
+        "Description": "LED FLOOR PANEL",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "39993",
+        "Description": "78 IN PLASTIC FIBER BUNDLE 200 STRAND",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "40341",
+        "Description": "ROCKER GLIDER CHAIR LPS",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "41148",
+        "Description": "WIFI WIRELESS CONTROLLER",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "41541",
+        "Description": "INTERACTIVE LED LIGHT ENGINE",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "41576",
+        "Description": "MAXI BUBBLE TUBE 80 IN TUBE ONLY",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "41643",
+        "Description": "CURVED FIBER OPTIC COMB TRKAA",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "41655",
+        "Description": "WIFI COLOR WALL WASHER",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "41671",
+        "Description": "MAXI BUBBLE TUBE CHASSIS SLIM PROFILE",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "41690",
+        "Description": "BALLS IN BUBBLE TUBE 80 IN LED",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "41721",
+        "Description": "SOUND SHELL WITH MP3OPTION",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "41743",
+        "Description": "QUADRANT BUBBLE TUBE BASE 48 IN",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "41765",
+        "Description": "LEARNING WALL QUARTER CIRCLE LEFT",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "41767",
+        "Description": "LEARNING WALL DIP B",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "41768",
+        "Description": "LEARNING WALL CURVE B",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "41770",
+        "Description": "LEARNING WALL QUARTER CIRCLE RIGHT",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "41818",
+        "Description": "SHELF STEREO SYSTEM",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "42080",
+        "Description": "ULTRA SHORT THROW PROJECTOR",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "42081",
+        "Description": "ULTRA SHORT THROW PROJECTOR MOUNT ONLY",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "42248",
+        "Description": "UNIV FLAT WALL MTN FOR 10-24 IN DISPLAY",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "42463",
+        "Description": "INTERACTIVE LIGHT TABLE LPS",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "43274",
+        "Description": "INTERACTIVE MOBILE FLOOR CUBE",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "43682",
+        "Description": "SOIL GUARD SOUND SHELL CHAIR",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "8315MAG",
+        "Description": "DEEP EFFECT WHEEL MAGNETIC",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "8405E",
+        "Description": "12 IN CLEAR MIRROR BALL",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "8420MAG",
+        "Description": "CLOUD EFFECT WHEEL MAGNETIC",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "8430",
+        "Description": "COLORED LIGHT SPRAY 78 IN 200 STRAND PFA",
+        "Quantity": 1,
+        "Serials": [],
+        "Trained": false
+      }
+    ],
+    "TrainedStaff": [
+      "Cedrick",
+      "Jamie"
+    ],
+    "Notes": {
+      "Comments": "",
+      "Issues": "",
+      "Feedback": ""
+    }
+  }
+  const beaubien = {
+    "Document": {
+      "Date": "0001-01-01T00:00:00",
+      "Language": 0
+    },
+    "Job": {
+      "Type": 0,
+      "OrderNbr": null,
+      "Start": "2023-02-27T08:15:25.7059571-05:00",
+      "End": "2023-02-27T08:15:25.7093293-05:00",
+      "Completed": false
+    },
+    "ContactInfo": {
+      "Organisation": "",
+      "Name": "",
+      "Title": "Program and services coordinator",
+      "Email": "",
+      "Phone": "",
+      "Website": "",
+      "Address": {
+        "Street": "",
+        "City": "Montréal",
+        "Province": 10,
+        "Country": "Canada",
+        "Code": ""
+      }
+    },
+    "Products": [
+      {
+        "Source": 2,
+        "Code": "20191R",
+        "Description": "MUSICAL WATERBED SINGLE NO HEATER/AMP",
+        "Quantity": 1.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "20191R",
+        "Description": "MUSICAL WATERBED SINGLE",
+        "Quantity": 1.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "21098RO",
+        "Description": "SENSORY MAGIC",
+        "Quantity": 1.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "39078",
+        "Description": "WALL MOUNTED BUBBLING WATER PANEL",
+        "Quantity": 1.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "40144",
+        "Description": "VARIABLE AXIS SWING",
+        "Quantity": 1.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "40152",
+        "Description": "HEIGHT ADJUSTMENT SYSTEM",
+        "Quantity": 5.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "41460",
+        "Description": "DREAM LOUNGER",
+        "Quantity": 1.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "41545",
+        "Description": "ADJUSTABLE ANGLE SWING FOOT RESTS",
+        "Quantity": 1.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "41838",
+        "Description": "CUSTOM ACRYLIC MIRROR",
+        "Quantity": 2.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "42080",
+        "Description": "ULTRA SHORT THROW PROJECTOR",
+        "Quantity": 1.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "42081",
+        "Description": "ULTRA SHORT THROW PROJECTOR MOUNT ONLY",
+        "Quantity": 1.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "42248",
+        "Description": "UNIV FLAT WALL MTN FOR 10-24 IN DISPLAY",
+        "Quantity": 1.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "43519",
+        "Description": "WATERBED HEATER ONLY",
+        "Quantity": 1.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "70C15",
+        "Description": "FLOOR CUSHION PER SQFT MULTIPLE PCS",
+        "Quantity": 1.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "70C15",
+        "Description": "FLOOR CUSHION PER SQFT 6 IN THICK",
+        "Quantity": 1.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "7262",
+        "Description": "LEAF CHAIR",
+        "Quantity": 1.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "7266",
+        "Description": "LEAF CHAIR STAND",
+        "Quantity": 1.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "99ZX01795",
+        "Description": "CUSTOM STEPS FOR BUBBLE TUBE BASE",
+        "Quantity": 1.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "99ZX01795",
+        "Description": "EDGE BLOCK MULTIPLE PCS",
+        "Quantity": 1.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "99ZX01795",
+        "Description": "WALL CUSHIONS MULTIPLE PIECES",
+        "Quantity": 1.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 2,
+        "Code": "99ZX01795",
+        "Description": "EDGE BLOCK PER SQ FT MULTIPLE PCS",
+        "Quantity": 1.0,
+        "Serials": [],
+        "Trained": false
+      }
+    ],
+    "TrainedStaff": [
+      "Cedrick",
+      "Jamie"
+    ],
+    "Notes": {
+      "Comments": "",
+      "Issues": "",
+      "Feedback": ""
+    }
+  }
+  async function addReport(reportId, reportJSON) {
+
+    const destDoc = doc(db, 'reports', reportId);
+    setDoc(destDoc, reportJSON, { merge:true })
+    .then(destDoc => {
+        console.log(`Document added successfully`);
     })
     .catch(error => {
         console.log(error);
