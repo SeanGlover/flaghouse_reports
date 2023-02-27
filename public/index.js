@@ -82,11 +82,10 @@ async function main() {
     }
     else {
       // changed, update currentUser and do something
-      currentUser = user;
       // only log to the console a change if it was done manually
       if(autoSignOutComplete) {
         if (signedIn) {
-          console.log(`user ${currentUser.uid} successfully signed in at ${new Date()}`);
+          console.log(`user ${user.uid} successfully signed in at ${new Date()}`);
           // signinBtn.removeEventListener("click", signinClicked);
           // determine access level in initialReportsLoad() so that 0, 1 or more reports are loaded
 
@@ -101,12 +100,13 @@ async function main() {
           // true | false [Jules Leger, Beaubien, Centre Le Cap]
     
         } else {
-          console.log(`user ${currentUser} successfully signed out at ${new Date()}`);
+          console.log(`user ${currentUser.uid} successfully signed out at ${new Date()}`);
           wrapperSignin.style.display = 'block';
             // unsubscribeReportIteration();
     
         }
       }
+      currentUser = user;
     }
   });
   async function signinClicked() {
@@ -169,6 +169,9 @@ async function main() {
     var signedInUser_hasProfile = auth.currentUser.uid in accessByUser;
     if(signedInUser_hasProfile) {
       var userAccess = accessByUser[auth.currentUser.uid];
+      var accessToAll = userAccess.ReportIds.length == 0;
+      var accessIds = accessToAll ? 'all' : userAccess.ReportIds.join('|');
+      console.log(accessIds);
       var accessLvl = userAccess.Permission;
       if(accessLvl >= 1) {
         // 0 = none, 1 = read, 2 = write
@@ -176,16 +179,16 @@ async function main() {
         // either user has access to a partial list or a full list - none doesn't get here
         var reports = collection(db, 'reports');
         var q;
-        if(userAccess.ReportIds.length == 0) {
+        if(accessToAll) {
           q = query(reports, orderBy('Document.Date', 'desc'));
         }
         else {
-          q= query(reports, where(documentId(), 'in', userAccess.ReportIds));
+          q = query(reports, where(documentId(), 'in', userAccess.ReportIds));
         }
         const querySnapshot = await getDocs(q);
         querySnapshot.forEach((doc) => {
-          if(userAccess.ReportIds.length == 0 | userAccess.ReportIds.includes(doc.id)) {
-            console.log(doc.id, " => ", doc.data());
+          if(accessToAll | userAccess.ReportIds.includes(doc.id)) {
+            // console.log(doc.id, " => ", doc.data());
             updateReportHTML(doc, false);
           }
         });
