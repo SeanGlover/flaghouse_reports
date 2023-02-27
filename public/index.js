@@ -381,6 +381,7 @@ async function main() {
     docCell.setAttribute('id', guidId);
     document.getElementById(guidId).innerHTML = text;
   }
+
   async function copyFirestore() {
 
     /////////////// from query -> doc ??
@@ -399,6 +400,7 @@ async function main() {
     });
 
   }
+
   async function userConfigs() {
 
     const destDoc = doc(db, 'access', 'b9NbHHku509AEMHjF6Kw'); // update
@@ -430,8 +432,16 @@ async function main() {
           "Access": {
             "Permission": 1,
             "ReportIds": [
-              "Ll62xGQgTNfODmdwWBse",
-              "Centre Le Cap"
+              "7AJmtUU3ypXSlNhqYVch"
+            ]
+          }
+        },
+        {
+          "Id": "7DsUGuz3rOhDkxStsZ8pbeu1mvB3",
+          "Access": {
+            "Permission": 1,
+            "ReportIds": [
+              "Ll62xGQgTNfODmdwWBse"
             ]
           }
         }
@@ -446,7 +456,6 @@ async function main() {
     })
 
   }
-
   const panama =
   {
     "Document": {
