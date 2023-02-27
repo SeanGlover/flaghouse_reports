@@ -63,7 +63,7 @@ async function main() {
       e.preventDefault();
     });
     signinBtn.addEventListener("click", signinClicked);
-    signoutBtn.addEventListener("click", signoutFirebase);
+    signoutBtn.addEventListener("click", signoutClicked);
     // signoutFirebase();
     autoSignOutComplete = true;
   });
@@ -111,6 +111,7 @@ async function main() {
   });
   async function signinClicked() {
     
+    resetSectionReports();
     const signin = await signInWithEmailAndPassword(auth, signinUsr.value, signinPwd.value)
     .then((userCredential) => {
       // ....... do something
@@ -122,8 +123,11 @@ async function main() {
       // ....... do something
       
     });
+
   }
-  async function signoutFirebase() {
+  async function signoutClicked() {
+
+    resetSectionReports()
     await signOut(auth).then(() => {
       signinBtn.innerHTML = 'Let me in!';
       autoSignOutComplete = true;
@@ -131,6 +135,7 @@ async function main() {
     }).catch(error => {
       console.log(`${error.code}: ${error.message}`);
     });
+
   }
 
   function resetSectionReports() {
