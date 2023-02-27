@@ -170,8 +170,13 @@ async function main() {
         // now get a list of reports to which the user has access
         // either user has access to a partial list or a full list - none doesn't get here
         var reports = collection(db, 'reports');
-        var some = userAccess.ReportIds.length != 0;
-        const q = query(reports, some ? where(documentId(), 'in', userAccess.ReportIds) : where('Document.Date', '!=', ''), orderBy('Document.Date', 'desc'));
+        var q;
+        if(userAccess.ReportIds.length == 0) {
+          q = query(reports, orderBy('Document.Date', 'desc'));
+        }
+        else {
+          q= query(reports, where(documentId(), 'in', userAccess.ReportIds));
+        }
         const querySnapshot = await getDocs(q);
         querySnapshot.forEach((doc) => {
           if(userAccess.ReportIds.length == 0 | userAccess.ReportIds.includes(doc.id)) {
