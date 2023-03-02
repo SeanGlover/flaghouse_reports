@@ -188,6 +188,7 @@ async function main() {
     // addReport('Ll62xGQgTNfODmdwWBse', lecap);
     // addReport('7AJmtUU3ypXSlNhqYVch', panama);
     // addReport('P9uiMYRAPjXZziB4f9hq', beaubien);
+    // addReport('H1nWYmk8CgzRtxp1vt6p', granby);
 
     var signedInUser_hasProfile = auth.currentUser.uid in accessByUser;
     if(signedInUser_hasProfile) {
@@ -247,6 +248,14 @@ async function main() {
     summaryClone.innerHTML = businessName;
     clone.id = queryDoc.id;
 
+    ////////// potentially change all the element names so jquery can find them
+    // can't do this for id
+    // var elementsWithId = $("*[id]");
+    // for(var i = 0; i < elementsWithId.length; i++) {
+    //   var elementId = elementsWithId[i].id;
+    //   elementsWithId[i].name = queryDoc.id + '_' + elementId;
+    // }
+
     var submitBtn = clone.querySelector("#submitForm");
     submitBtn.style = 'background-color: #55acee; padding: 10px 30px 10px 30px;';
     submitBtn.addEventListener('click', function() {
@@ -297,16 +306,77 @@ async function main() {
       })
 
     });
-    clone.querySelector('#upload-button').addEventListener('click', async function() {
 
-      ////////// upload compressed photos of a completed room
-      var fileUpload = clone.querySelector('#fileupload');
-      for (var f = 0; f < fileUpload.files.length; f++) {
-        var file = fileUpload.files[f];
-        uploadFile(file, queryDoc.id);
+    //#region "file upload"
+    // perform a click on the input file to start the file explorer
+    // done this way since label for= doesn't register the files a user selected
+    var filesChoose_delegate = clone.querySelector('#div_files-choose');
+    var filesChoose = clone.querySelector('#files-choose');
+    var filesUpload = clone.querySelector('#div_files-upload');
+    var label_filesChoose = clone.querySelector('#label_files-choose');
+    var label_filesUpload = clone.querySelector('#label_files-upload');
+    filesChoose_delegate.addEventListener('click', function xxx (e) {
+      // Get the target
+      const target = e.target;
+      // Get the bounding rectangle of target
+      const rect = target.getBoundingClientRect();
+      // Mouse position
+      const x = e.clientX;
+      const y = e.clientY;
+
+      var trash = clone.querySelector('#files-trash');
+      if(trash == null) {
+        filesChoose.click();
+      }
+      else {
+        var trashRect = trash.getBoundingClientRect();
+        if(x > trashRect.x & x < (trashRect.x + trashRect.width) & y > trashRect.y & y < (trashRect.y + trashRect.height)) {
+          /// clicked on the trashcan!
+          resetSelectUpload();
+        }
+        else {
+          filesChoose.click();
+        }
+      }
+    });
+    // the change event is fired when the file explorer returned selected file(s)
+    filesChoose.addEventListener('change', async function() {
+
+      var filenames = [];
+      for (var f = 0; f < filesChoose.files.length; f++) {
+        filenames.push(filesChoose.files[f].name);
+      }
+      if(filenames.length == 0) {
+        resetSelectUpload();
+      }
+      else {
+        label_filesUpload.style = "background-color: green; color: white";
+        label_filesChoose.innerHTML = `<i class="bi bi-trash" id="files-trash" style="font-size:24px;"></i>${filenames.join(' + ')}`;
+        clone.querySelector('#files-trash').addEventListener('click', function() {
+          label_filesUpload.innerHTML = '<i class="bi bi-cloud-arrow-up" style="font-size:24px; z-index: 1"></i>Upload';
+        })
       }
 
     });
+    filesUpload.addEventListener('click', async function() {
+
+      ////////// upload compressed photos of a completed room
+      label_filesUpload.style = "background-color: gold; color: black";
+      for (var f = 0; f < filesChoose.files.length; f++) {
+        var file = filesChoose.files[f];
+        await uploadFile(file, queryDoc.id);
+      }
+      label_filesUpload.style = "background-color: green; color: white";
+
+    });
+    function resetSelectUpload() {
+
+      filesChoose.value = '';
+      label_filesUpload.style = "color: black";
+      label_filesChoose.innerHTML = '<i class="bi bi-folder-plus" style="font-size:24px;"></i>Choose file(s)';
+
+    }
+    //#endregion
 
     var docDate = docData.Document.Date;
     clone.querySelector("#businessName").setAttribute("value", businessName);
@@ -472,7 +542,7 @@ async function main() {
   }
   async function uploadFile(file, id) {
 
-    var filename = `sean/files/${id}_${file.name}`;
+    var filename = `sean/files/${id}/${file.name}`;
     const storage = getStorage();
     const storageRef = ref(storage, filename);
 
@@ -490,7 +560,8 @@ async function main() {
     // text/html
     // text/plain
 
-    var extension = file.name.split('.')[1].toLowerCase();
+    var dots = file.name.split('.');
+    var extension = dots[dots.length - 1].toLowerCase();
     var applicationTypes = ['json', 'pdf', 'zip'];
     var imageTypes = ['jpeg', 'png'];
     var textTypes = ['csv', 'html', 'txt'];
@@ -590,7 +661,7 @@ async function main() {
           }
         },
         {
-          "Id": "YY5jIJ8NpgNiXVYn92fW72igNNM2",
+          "Id": "6r1rEItvtog8uA04TVQmieQ3CnC2",
           "Access": {
             "Permission": 1,
             "ReportIds": [
@@ -1219,6 +1290,204 @@ async function main() {
     "TrainedStaff": [
       "Cedrick",
       "Jamie"
+    ],
+    "Notes": {
+      "Comments": "",
+      "Issues": "",
+      "Feedback": ""
+    }
+  }
+  const granby = {
+    "Document": {
+      "Date": "2023-03-01T21:00:00",
+      "Language": 2
+    },
+    "Job": {
+      "Type": 0,
+      "OrderNbr": "NSOPP6764",
+      "Start": "2023-03-07T08:00:00.0297191-05:00",
+      "End": "2023-03-09T18:02:08.0307181-05:00",
+      "Completed": false
+    },
+    "ContactInfo": {
+      "Organisation": "Cégep de Granby",
+      "Name": "Stéphanie Santerre",
+      "Title": "Technicienne en travaux pratiques",
+      "Email": "ssanterre@cegepgranby.qc.ca",
+      "Phone": "450-372-6614, poste 1363",
+      "Website": "https://cegepgranby.ca/",
+      "Address": {
+        "Street": "235 Rue Saint-Jacques",
+        "City": "Granby",
+        "Province": 10,
+        "Country": "Canada",
+        "Code": "J2G 3N1"
+      }
+    },
+    "Products": [
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      }
+    ],
+    "TrainedStaff": [
+      "John"
     ],
     "Notes": {
       "Comments": "",

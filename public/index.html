@@ -415,11 +415,23 @@
                   </div>
                 </div>
               </div>
+
               <div class="col-12" style="padding-bottom: 10px;">
-                <input id="fileupload" type="file" name="fileupload" multiple/>
-                <div class="button-success pure-button button-xlarge" type="button" style="background-color: #55acee; padding: 10px 30px 10px 30px; max-width: 200px;" id="upload-button">
-                  Upload
+                <div class="variants">
+                  <input class='file' id="files-choose" style="display: none;" type="file" multiple/>
+                  <div class='file' id="div_files-choose">
+                    <!-- for='files-upload' ... removed this and handled on click() in index.js -->
+                    <label id="label_files-choose">
+                      <i class="bi bi-folder-plus" style="font-size:24px;"></i>Choose file(s)
+                    </label>
+                  </div>
+                  <div class='file file--upload' id="div_files-upload">
+                    <label id="label_files-upload">
+                      <i class="bi bi-cloud-arrow-up" style="font-size:24px;"></i>Upload
+                    </label>
+                  </div>
                 </div>
+
                 <div class="row" style="color: red; font-weight: bolder; padding: 6px 0px 0px 0px; margin: 0px; display: none;" id="submitWarning">
                 </div>
                 <!-- submit_form -- change type="button" back to type="submit" -->
