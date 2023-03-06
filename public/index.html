@@ -417,10 +417,22 @@
               </div>
 
               <div class="col-12" style="padding-bottom: 10px;">
-                <div class="variants">
+                <div class="variants" style="display: none;">
+
                   <input class='file' id="files-choose" style="display: none;" type="file" multiple/>
+
+                  <div class='file' id="div_files-chooseJSON">
+                    <label id="label_files-chooseJSON">
+                      <i class="bi bi-folder-plus" style="font-size:24px;"></i>Choose file(s)
+                    </label>
+                  </div>
+                  <div class='file file--upload' id="div_files-uploadJSON">
+                    <label id="label_files-uploadJSON">
+                      <i class="bi bi-cloud-arrow-up" style="font-size:24px;"></i>Upload
+                    </label>
+                  </div>
+
                   <div class='file' id="div_files-choose">
-                    <!-- for='files-upload' ... removed this and handled on click() in index.js -->
                     <label id="label_files-choose">
                       <i class="bi bi-folder-plus" style="font-size:24px;"></i>Choose file(s)
                     </label>
@@ -430,6 +442,7 @@
                       <i class="bi bi-cloud-arrow-up" style="font-size:24px;"></i>Upload
                     </label>
                   </div>
+                  
                 </div>
 
                 <div class="row" style="color: red; font-weight: bolder; padding: 6px 0px 0px 0px; margin: 0px; display: none;" id="submitWarning">

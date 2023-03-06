@@ -307,6 +307,11 @@ async function main() {
 
     });
 
+    clone.querySelector('#div_files-chooseJSON').addEventListener('click', function() {
+      // click to choose new access config JSON -or- new report JSON
+      // addReport('abcdefghij', cranby);
+    });
+
     //#region "file upload"
     // perform a click on the input file to start the file explorer
     // done this way since label for= doesn't register the files a user selected
@@ -315,7 +320,7 @@ async function main() {
     var filesUpload = clone.querySelector('#div_files-upload');
     var label_filesChoose = clone.querySelector('#label_files-choose');
     var label_filesUpload = clone.querySelector('#label_files-upload');
-    filesChoose_delegate.addEventListener('click', function xxx (e) {
+    filesChoose_delegate.addEventListener('click', function (e) {
       // Get the target
       const target = e.target;
       // Get the bounding rectangle of target
@@ -1298,6 +1303,204 @@ async function main() {
     }
   }
   const granby = {
+    "Document": {
+      "Date": "2023-03-01T21:00:00",
+      "Language": 2
+    },
+    "Job": {
+      "Type": 0,
+      "OrderNbr": "NSOPP6764",
+      "Start": "2023-03-07T08:00:00.0297191-05:00",
+      "End": "2023-03-09T18:02:08.0307181-05:00",
+      "Completed": false
+    },
+    "ContactInfo": {
+      "Organisation": "Cégep de Granby",
+      "Name": "Stéphanie Santerre",
+      "Title": "Technicienne en travaux pratiques",
+      "Email": "ssanterre@cegepgranby.qc.ca",
+      "Phone": "450-372-6614, poste 1363",
+      "Website": "https://cegepgranby.ca/",
+      "Address": {
+        "Street": "235 Rue Saint-Jacques",
+        "City": "Granby",
+        "Province": 10,
+        "Country": "Canada",
+        "Code": "J2G 3N1"
+      }
+    },
+    "Products": [
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      },
+      {
+        "Source": 0,
+        "Code": "",
+        "Description": "",
+        "Quantity": 0.0,
+        "Serials": [],
+        "Trained": false
+      }
+    ],
+    "TrainedStaff": [
+      "John"
+    ],
+    "Notes": {
+      "Comments": "",
+      "Issues": "",
+      "Feedback": ""
+    }
+  }
+  const cranby = {
     "Document": {
       "Date": "2023-03-01T21:00:00",
       "Language": 2
