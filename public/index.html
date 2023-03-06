@@ -78,7 +78,7 @@
             <!-- turn off sending form for now -->
             <!-- method="POST" data-email="seanglover.spg@gmail.com" action="https://script.google.com/macros/s/AKfycbyABqfNw4SOsPGcPizonfN4s7V5mRTGcHB_p0LfPG3vq3Ir1aNI-4Iz6Zos0nfggFh72g/exec" onsubmit="formSubmitted()" -->
             
-            <form class="gform pure-form pure-form-stacked" id="mainForm">
+            <form class="gform pure-form pure-form-stacked" id="mainForm" onsubmit="return false;">
               <div class="row" style="padding: 6px 0px 0px 0px; margin: 0px;">
                 <!-- business section -->
                 <div class="col-md-3">
@@ -448,7 +448,7 @@
                 <div class="row" style="color: red; font-weight: bolder; padding: 6px 0px 0px 0px; margin: 0px; display: none;" id="submitWarning">
                 </div>
                 <!-- submit_form -- change type="button" back to type="submit" -->
-                <button class="button-success pure-button button-xlarge" type="button" style="background-color: #55acee; padding: 10px 30px 10px 30px;" id="submitForm">
+                <button class="button-success pure-button button-xlarge" type="submit" style="background-color: #55acee; padding: 10px 30px 10px 30px;" id="submitForm">
                   <div class="row" style="padding: 6px 0px 0px 0px; margin: 0px;">
                     <div class="col-lg-3 col-sm-3">
                       <i class="fa fa-paper-plane"></i>
