@@ -61,7 +61,7 @@
          
       <section id="sectionReports" style="display: none;">
         <div class="row" style="padding: 0px 0px 0px 0px; margin: 0px;">
-          <div class="col-md-6 bi-list my-auto" style="font-size: 40px; font-weight: bolder; color:cornflowerblue;">
+          <div class="col-md-6 bi-list my-auto" id="reportsTitle" style="font-size: 40px; font-weight: bolder; color:cornflowerblue;">
             Reports
           </div>
           <div class="col-md-3 my-auto">
@@ -96,7 +96,7 @@
                 </div>
                 <div class="col-lg-3 col-sm-6">
                   <!-- document_date -->
-                  <label for="documentDate" class="form-label">Document date</label>
+                  <label for="documentDate" id="documentDateLabel" class="form-label">Document date</label>
                   <div class="input-group">
                     <input id="documentDate" class="form-control" type="date" value="">
                   </div>
@@ -104,7 +104,7 @@
               </div>
               <div class="row" style="padding: 6px 0px 0px 0px; margin: 0px;">
                 <!-- address -->
-                <div class="col-md-6">
+                <div class="col-lg-6 col-md-4 col-sm-3">
                   <!-- street -->
                   <label for="addressStreet" class="form-label" id="addressStreetLabel">Street</label>
                   <input type="text" class="form-control" id="addressStreet" value="" required="">
@@ -144,7 +144,7 @@
                     Please select a valid province.
                   </div>
                 </div>
-                <div class="col-md-1">
+                <div class="col-lg-2 col-md-2 col-sm-2">
                   <!-- postal_code -->
                   <label for="addressPostalCode" class="form-label" id="addressPostalCodeLabel">Postal code</label>
                   <input type="text" class="form-control" id="addressPostalCode" required="" value="">
@@ -155,7 +155,7 @@
               </div>
               <div class="row justify-content-left" style="padding: 8px 0px 0px 0px; margin: 0px;">
                 <!-- contact section -->
-                <div class="col-md-2">
+                <div class="col-lg-2 col-md-3 col-sm-3">
                   <!-- contact_name -->
                   <label for="contactName" class="form-label" id="contactNameLabel">Contact name</label>
                   <input type="text" class="form-control" id="contactName" value="" required="">
@@ -173,7 +173,7 @@
                     <input type="text" class="form-control" id="contactEmail" value="" aria-describedby="inputGroupPrepend" required="">
                   </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                   <!-- contact_phone -->
                   <label for="" class="form-label" id="contactPhoneLabel">Contact phone</label>
                   <div class="input-group has-validation">
@@ -202,13 +202,13 @@
                 <div class="col-md-2">
                   <!-- installation_types -->
                   <div class="input-group">
-                    <span class="input-group-text">Call type</span>
+                    <span class="input-group-text" id="jobTypesLabel">Call type</span>
                     <select class="form-select" id="jobTypes" value="Installation" required="" style="min-height: 45px;">
-                      <option selected="" disabled="">Types
-                      </option><option value="I" id="type_install" selected="">Installation
-                      </option><option value="W" id="type_warranty">Warranty
-                      </option><option value="S" id="type_service">Service
-                    </option></select>
+                      <option selected="" disabled="">Types</option>
+                      <option value="I" id="type_install" selected="">Installation</option>
+                      <option value="W" id="type_warranty">Warranty</option>
+                      <option value="S" id="type_service">Service</option>
+                    </select>
                   </div>
                 </div>
                 <div class="col-md-2">
@@ -227,7 +227,7 @@
                     <input id="startDate" name="startDate" class="form-control" type="date" value="">
                   </div>
                 </div>
-                <div class="col-lg-2 col-sm-6">
+                <div class="col-lg-3 col-sm-6">
                   <!-- end_date -->
                   <div class="input-group">
                     <span class="input-group-text" id="endDateLabel">End</span>
@@ -236,7 +236,7 @@
                 </div>
               </div>
         
-              <li class="flex-fill list-group-item" style="text-align: center; background-color: #4267B2; color: white; margin: 0px 0px 0px 0px;">Serialized products</li>
+              <li class="flex-fill list-group-item" id="serialsLabel" style="text-align: center; background-color: #4267B2; color: white; margin: 0px 0px 0px 0px;">Serialized products</li>
               <ul class="list-group list-group-horizontal" style="margin: 1px;">
                 <li class="flex-fill list-group-item" id="r1c1_serial"></li>
                 <li class="flex-fill list-group-item" id="r1c2_serial"></li>
@@ -262,7 +262,7 @@
                 <li class="flex-fill list-group-item" id="r5c2_serial"></li>
                 <li class="flex-fill list-group-item" id="r5c3_serial"></li>
               </ul>
-              <li class="flex-fill list-group-item" style="text-align: center; background-color: #dcdcdc; color: black; margin: 0px 0px 0px 0px;">Trained products</li>
+              <li class="flex-fill list-group-item" id="trainedProductsLabel" style="text-align: center; background-color: #dcdcdc; color: black; margin: 0px 0px 0px 0px;">Trained products</li>
               <ul class="list-group list-group-horizontal" style="margin: 1px;">
                 <li class="flex-fill list-group-item" id="r1c1_trained"></li>
                 <li class="flex-fill list-group-item" id="r1c2_trained"></li>
@@ -289,7 +289,7 @@
                 <li class="flex-fill list-group-item" id="r5c3_trained"></li>
               </ul>
                 <!-- trained staff names - comma separated -->
-              <li class="flex-fill list-group-item" style="text-align: center; background-color: #E6E6FA; color: black; margin: 0px 0px 0px 0px;">Trained staff
+              <li class="flex-fill list-group-item" id="trainedStaffLabel" style="text-align: center; background-color: #E6E6FA; color: black; margin: 0px 0px 0px 0px;">Trained staff
               </li>
               <ul class="list-group list-group-horizontal" style="margin: 1px;">
                 <li class="flex-fill list-group-item" id="r1c1_trainedStaff" style="min-height: 40px;">monkey</li>
@@ -297,18 +297,18 @@
 
               <div class="form-floating" style="padding: 3px; margin-top: 10px;">
                 <!-- comments -->
-                <textarea class="form-control" placeholder="Leave a comment here" id="comments" oninput="auto_grow(this)"></textarea>
-                <label for="comments" style="color: CornflowerBlue; font-weight: bold;">Comments</label>
+                <textarea class="form-control" id="comments" placeholder="Leave a comment here" oninput="auto_grow(this)"></textarea>
+                <label for="comments" id="commentsLabel" style="color: CornflowerBlue; font-weight: bold;">Comments</label>
               </div>
               <div class="form-floating" style="padding: 3px;">
                 <!-- issues -->
-                <textarea class="form-control" placeholder="Leave a comment here" id="issues" oninput="auto_grow(this)" value=""></textarea>
-                <label for="issues" style="color: CornflowerBlue; font-weight: bold;">Issues</label>
+                <textarea class="form-control" id="issues" placeholder="State any issues here" oninput="auto_grow(this)" value=""></textarea>
+                <label for="issues" id="issuesLabel" style="color: CornflowerBlue; font-weight: bold;">Issues</label>
               </div>
               <div class="form-floating" style="padding: 3px;">
                 <!-- client comments -->
-                <textarea class="form-control" name="clientComments" placeholder="Leave a comment here" id="clientComments" oninput="auto_grow(this)"></textarea>
-                <label for="clientComments" style="color: CornflowerBlue; font-weight: bold;">Client comments</label>
+                <textarea class="form-control" id="clientComments" name="clientComments" placeholder="Client: leave a comment here" oninput="auto_grow(this)"></textarea>
+                <label for="clientComments" id="clientCommentsLabel" style="color: CornflowerBlue; font-weight: bold;">Client comments</label>
               </div>
         
               <div class="row" style="padding: 6px 0px 0px 0px; margin: 0px;">
@@ -340,7 +340,7 @@
                         <td><img src="images/starEmpty.png" id="4-overall" width="25" height="25"></td>
                         <td><img src="images/starEmpty.png" id="5-overall" width="25" height="25"></td>
                       </td>
-                      <td style="text-align: center; font-weight: bolder;">
+                      <td id="ratingOverallLabel" style="text-align: center; font-weight: bolder;">
                         Overall rating
                       </td>
                     </tr>
@@ -348,7 +348,7 @@
                   <!-- clickable stars (20px) -->
                   <table id="starsByCategory" style="font-size: larger;">
                     <tr>
-                      <td>Installer professional</td>
+                      <td id="starsProfessional">Installer professional</td>
                       <td>
                         <td><img src="images/starEmpty.png" id="1-professional" width="20" height="20"></td>
                         <td><img src="images/starEmpty.png" id="2-professional" width="20" height="20"></td>
@@ -358,7 +358,7 @@
                       </td>
                     </tr>
                     <tr>
-                      <td>Installer promptness</td>
+                      <td id="starsPrompt">Installer promptness</td>
                       <td>
                         <td><img src="images/starEmpty.png" id="1-prompt" width="20" height="20"></td>
                         <td><img src="images/starEmpty.png" id="2-prompt" width="20" height="20"></td>
@@ -368,7 +368,7 @@
                       </td>
                     </tr>
                     <tr>
-                      <td>Installer workmanship</td>
+                      <td id="starsWorkmanship">Installer workmanship</td>
                       <td>
                         <td><img src="images/starEmpty.png" id="1-workmanship" width="20" height="20"></td>
                         <td><img src="images/starEmpty.png" id="2-workmanship" width="20" height="20"></td>
@@ -378,7 +378,7 @@
                       </td>
                     </tr>
                     <tr>
-                      <td>Product quality</td>
+                      <td id="starsQuality">Product quality</td>
                       <td>
                         <td><img src="images/starEmpty.png" id="1-quality" width="20" height="20"></td>
                         <td><img src="images/starEmpty.png" id="2-quality" width="20" height="20"></td>
@@ -391,7 +391,7 @@
                       <td>
                         <input style="max-height: 36px; font-size:large" type="text" class="form-control" name="starsOther" id="starsOtherInput" aria-describedby="inputGroupPrepend" placeholder="Optional input - type your criteria">
                       </td>
-                      <td>
+                      <td id="starsClient">
                         <td><img src="images/starEmpty.png" id="1-other" width="20" height="20"></td>
                         <td><img src="images/starEmpty.png" id="2-other" width="20" height="20"></td>
                         <td><img src="images/starEmpty.png" id="3-other" width="20" height="20"></td>
@@ -407,10 +407,10 @@
                 <!-- terms_checkbox -->
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" value="" id="agreeTermsCheck" required="">
-                  <label class="form-check-label" for="agreeTermsCheck">
+                  <label class="form-check-label" id="agreeTermsLabel" for="agreeTermsCheck">
                     Agree to terms and conditions
                   </label>
-                  <div class="invalid-feedback">
+                  <div class="invalid-feedback" id="invalidFeedback">
                     You must agree before submitting.
                   </div>
                 </div>
@@ -453,7 +453,7 @@
                     <div class="col-lg-3 col-sm-3">
                       <i class="fa fa-paper-plane"></i>
                     </div>
-                    <div class="col-lg-6 col-sm-6">
+                    <div class="col-lg-6 col-sm-6" id="submitLabel">
                       Submit
                     </div>
                   </div>
@@ -473,17 +473,14 @@
             </form>
             <form id="thankYouMessage" style="display: none">
               <div class="jumbotron text-center">
-                <h1 class="display-3">Thank You!</h1>
+                <h1 class="display-3" id="thankYou">Thank You!</h1>
                 <p class="lead" id="appreciateIt"><strong>We have received your submission.</strong> We'll take it from here!</p>
                 <hr>
-                <button class="pure-button button-medium" style="padding: 10px 30px 10px 30px;" id="reload" onclick="window.location.reload();">
+                <button class="pure-button button-medium" id="reload" style="padding: 10px 30px 10px 30px;" onclick="window.location.reload();">
                   <i class="fa fa-arrow-left"></i>
                   &nbsp;Return to original form
                 </button>
-                <p>
-                  Visit us!
-                  <a href="https://www.flaghouse.ca/">Continue to homepage</a>
-                </p>
+                <p id="visitUs">Visit us!<a href="https://www.flaghouse.ca/" id="homepage">Continue to homepage</a></p>
               </div>
               <footer class="site-footer" id="footer">
                 <p class="site-footer__fineprint" id="fineprint">FlagHouse, Inc. | 50 East Wilmot Street, Suite 201 | Richmond Hill, ON L4B 3Z3 | Copyright ©2005 - 2023, All Rights Reserved</p>

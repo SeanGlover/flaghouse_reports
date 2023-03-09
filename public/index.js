@@ -92,7 +92,7 @@ async function main() {
       if(autoSignOutComplete) {
         if (signedIn) {
           console.log(`user ${user.uid} successfully signed in at ${new Date()}`);
-          // userConfigs(); // <-- add new users
+          userConfigs(); // <-- add new users
 
           initialReportsLoad();
           ///////// start realtime updates
@@ -227,6 +227,7 @@ async function main() {
     var job = docData.Job;
     var products = docData.Products;
     var contactInfo = docData.ContactInfo;
+    var jobDoc = docData.Document;
     var contactAddress = contactInfo.Address;
     var businessName = contactInfo.Organisation;
     var summaryClone = clone.getElementsByTagName('summary')[0];
@@ -382,27 +383,85 @@ async function main() {
     }
     //#endregion
 
-    var docDate = docData.Document.Date;
+    var docDate = jobDoc.Date;
+    var efs = jobDoc.Language; // English|French|Spanish
+
+    document.querySelector('#reportsTitle').innerText = efs == 1 ? 'Reports' : efs == 2 ? 'Rapports' : 'Reportes';
+    document.querySelector('#signout').innerText = efs == 1 ? 'Sign out' : efs == 2 ? 'Fermer session' : 'Cerrar sesión';
+
     clone.querySelector("#businessName").setAttribute("value", businessName);
+    clone.querySelector('#businessNameLabel').innerText = efs == 1 ? 'Business name' : efs == 2 ? 'Compagnie' : 'Empresa';
     clone.querySelector("#purchaseOrder").setAttribute("value", job.OrderNbr);
+    clone.querySelector('#purchaseOrderLabel').innerText = efs == 1 ? 'Purchase order' : efs == 2 ? 'Bon de commande' : 'Orden de compra';
     clone.querySelector("#documentDate").setAttribute("value", docDate.split('T')[0]);
+    clone.querySelector('#documentDateLabel').innerText = efs == 1 ? 'Document date' : efs == 2 ? 'Date de document' : 'Fecha del documento';
     clone.querySelector("#addressStreet").setAttribute("value", contactAddress.Street);
+    clone.querySelector('#addressStreetLabel').innerText = efs == 1 ? 'Street' : efs == 2 ? 'Rue' : 'Calle';
     clone.querySelector("#addressCity").setAttribute("value", contactAddress.City);
+    clone.querySelector('#addressCityLabel').innerText = efs == 1 ? 'City' : efs == 2 ? 'Ville' : 'Ciudad';
     clone.querySelector("#addressPostalCode").setAttribute("value", contactAddress.Code);
     
     // 0   1   2   3   4   5   6   7   8   9   10  11  12
     // AB, BC, MB, NB, NL, NT, NS, NU, ON, PE, QC, SK, YK
-    optionSet(clone, 'provinces', contactAddress.Province);
-    
+    optionSet(clone.querySelector('#provinces'), contactAddress.Province);
+    clone.querySelector('#addressPostalCodeLabel').innerText = efs == 1 ? 'Postal code' : efs == 2 ? 'Code postale' : 'Código postal';
     clone.querySelector("#contactName").setAttribute("value", contactInfo.Name);
+    clone.querySelector('#contactNameLabel').innerText = efs == 1 ? 'Contact name' : efs == 2 ? 'Nom de contact' : 'Nombre de contacto';
     clone.querySelector("#contactTitle").setAttribute("value", contactInfo.Title);
+    clone.querySelector('#contactTitleLabel').innerText = efs == 1 ? 'Contact title' : efs == 2 ? 'Titre' : 'Título';
     clone.querySelector("#contactEmail").setAttribute("value", contactInfo.Email);
+    clone.querySelector('#contactEmailLabel').innerText = efs == 1 ? 'Contact email' : efs == 2 ? 'Courriel' : 'Correo';
     clone.querySelector("#contactPhone").setAttribute("value", contactInfo.Phone);
-   
-    optionSet(clone, 'jobTypes', job.Type);
+    clone.querySelector("#contactPhoneLabel").innerText = efs == 1 ? 'Contact phone' : efs == 2 ? 'N°. de téléphone' : 'Número de teléfono';
+
+    var jobTypeOptions = clone.querySelector('#jobTypes');
+    if(efs == 1) {
+      jobTypeOptions.innerHTML = '<option selected="" disabled="">Types</option><option value="I" id="type_install">Installation</option><option value="W" id="type_warranty">Warranty</option><option value="S" id="type_service">Service</option>';
+    }
+    else if(efs == 2) {
+      jobTypeOptions.innerHTML = '<option selected="" disabled="">Types</option><option value="I" id="type_install">Installation</option><option value="W" id="type_warranty" selected="&quot;&quot;">Garantie</option><option value="S" id="type_service">Service</option>';
+    }
+    else if(efs == 3) {
+      jobTypeOptions.innerHTML = '<option selected="" disabled="">Types</option><option value="I" id="type_install">Instalación</option><option value="W" id="type_warranty" selected="&quot;&quot;">Garantía</option><option value="S" id="type_service">Servicio</option>';
+    }
+    optionSet(jobTypeOptions, job.Type);
+    clone.querySelector('#jobTypesLabel').innerText = efs == 1 ? 'Call type' : efs == 2 ? 'Type' : 'Tipo';
+
     clone.querySelector("#checkComplete").checked = job.Completed;
+    clone.querySelector('#checkCompleteLabel').value = efs == 1 ? 'Check if complete' : efs == 2 ? 'Completé' : 'completo';
+    
     clone.querySelector("#startDate").setAttribute("value", job.Start.split('T')[0]);
+    clone.querySelector('#startDateLabel').innerText = efs == 1 ? 'Start' : efs == 2 ? 'Début' : 'Empezo';
     clone.querySelector("#endDate").setAttribute("value", job.End.split('T')[0]);
+    clone.querySelector('#endDateLabel').innerText = efs == 1 ? 'End' : efs == 2 ? 'Fin' : 'Fin';
+
+    clone.querySelector('#serialsLabel').innerText = efs == 1 ? 'Serialized products' : efs == 2 ? 'Produits sérialisés' : 'Productos serializados';
+    clone.querySelector('#trainedProductsLabel').innerText = efs == 1 ? 'Trained products' : efs == 2 ? 'Produits formés' : 'Productos entrenados';
+    clone.querySelector('#trainedStaffLabel').innerText = efs == 1 ? 'Trained staff' : efs == 2 ? 'Personel formé' : 'Personal capacitado';
+    
+    clone.querySelector('#commentsLabel').innerText = (efs == 1 ? 'Comments' : efs == 2 ? 'Commentaires' : 'Commentarios') + ' (Flaghouse)';
+    clone.querySelector('#issuesLabel').innerText = efs == 1 ? 'Issues' : efs == 2 ? 'Problèmes' : 'Problemas';
+    clone.querySelector('#clientCommentsLabel').innerText = efs == 1 ? 'Client comments' : efs == 2 ? 'Commentaires (client)' : 'Commentarios (cliente)';
+    clone.querySelector('#clientSignatureLabel').innerText = efs == 1 ? 'Client signature' : efs == 2 ? 'Signature du client' : 'Firma cliente';
+    clone.querySelector('#clientSignature').placeholder = efs == 1 ? 'Type your name' : efs == 2 ? 'Écrivez votre nom' : 'Escribir su nombre';
+    clone.querySelector('#signDateLabel').innerText = efs == 1 ? 'Dated' : efs == 2 ? 'Daté' : 'Fechado';
+
+    //Stars
+    clone.querySelector('#ratingOverallLabel').innerText = efs == 1 ? 'Overall rating' : efs == 2 ? 'Évaluation globale' : 'Valoración general';
+    clone.querySelector('#starsProfessional').innerText = efs == 1 ? 'Installer professional' : efs == 2 ? 'Professionnalisme de l’installateur' : 'X del instalador';
+    clone.querySelector('#starsPrompt').innerText = efs == 1 ? 'Installer promptness' : efs == 2 ? "Promptitude d'installateur" : 'Prontitud del instalador';
+    clone.querySelector('#starsWorkmanship').innerText = efs == 1 ? 'Installer workmanship' : efs == 2 ? 'Niveau de qualité du travail' : 'Mano de obra del instalador';
+    clone.querySelector('#starsQuality').innerText = efs == 1 ? 'Product quality' : efs == 2 ? 'Qualité des produits' : 'Calidad de los productos';
+    clone.querySelector('#starsOtherInput').placeholder = efs == 1 ? 'Optional input - type your criteria' : efs == 2 ? 'Saisie optionnelle - tapez vos critères' : 'Entrada opcional - escriba sus criterios';
+
+    clone.querySelector('#agreeTermsLabel').innerText = efs == 1 ? 'Agree to terms and conditions' : efs == 2 ? 'Accepter termes et conditions' : 'Aceptar los términos y condiciones';
+    clone.querySelector('#submitLabel').innerText = efs == 1 ? 'Submit' : efs == 2 ? 'Soumettre' : 'Enviar';
+
+    //submission form
+    clone.querySelector('#thankYou').innerText = efs == 1 ? 'Thank you!' : efs == 2 ? 'Merci!' : '¡Gracias!';
+    clone.querySelector('#appreciateIt').innerText = efs == 1 ? "We have received your submission. We'll take it from here!" : efs == 2 ? 'Nous avons reçu votre soumission. C’est maintenant à nous!' : 'Hemos recibido su presentación. ¡Nos encargaremos desde aquí!';
+    clone.querySelector('#reload').innerText = efs == 1 ? "Return to original form" : efs == 2 ? 'Retour au formulaire original' : 'Volver al formulario original';
+    clone.querySelector('#visitUs').innerHTML = efs == 1 ? 'Visit us! <a href="https://www.flaghouse.ca/" id="homepage">Continue to homepage</a>' : efs == 2 ? 'Visitez-nous! <a href="https://www.flaghouse.ca/" id="homepage">Passer à notre page d’accueil</a>' : 'Visitarnos! <a href="https://www.flaghouse.ca/" id="homepage">Continuar a nuestra página de inicio</a>';
 
     var clientResponse = docData.ClientResponse;
     var submitWarning = clone.querySelector("#submitWarning");
@@ -411,10 +470,11 @@ async function main() {
     }
     else {
       submitWarning.style.display = 'block';
-      var tmstmp = new Date(clientResponse.Date.seconds * 1000).toString();
+      var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      var tmstmp = new Date(clientResponse.Date.seconds * 1000);
       var match = /20[0-9]{2} [0-2][0-9]:[0-5][0-9]:[0-5][0-9]/g.exec(tmstmp);
-      var matchString = tmstmp.substr(0, match.index + match[0].length);
-      submitWarning.innerText = `Submitted ${matchString} ... submit agian (overwrite)?`;
+      var dateString = tmstmp.toLocaleString(efs == 1 ? 'en-US' : efs == 2 ? 'fr-FR' : 'es-MX', { month: 'long', day: 'numeric', year: 'numeric' });
+      submitWarning.innerText = efs == 1 ? `Submitted ${dateString} ... overwrite?` : efs == 2 ? `Soumis le ${dateString} ... réécriture?` : `Enviado el ${dateString} ... sobrescribir?`;
     }
 
     summaryClone.style.borderLeft = '15px solid grey';
@@ -499,12 +559,12 @@ async function main() {
     }
 
   }
-  function optionSet(clonedReport, id, selectedIndex) {
+  function optionSet(options, selectedIndex) {
 
-    var options = clonedReport.querySelector('#' + id).children;
     options.selectedIndex = -1;
-    var option = options[selectedIndex + 1];
-    clonedReport.querySelector(`#${option.id}`).setAttribute("selected", "\"\"");
+    if(selectedIndex < options.length) {
+      options.selectedIndex = selectedIndex + 1;
+    }
 
   }
   function rxcySetCellText(clonedReport, rxcy, text) {
@@ -689,6 +749,15 @@ async function main() {
             "Permission": 1,
             "ReportIds": [
               "P9uiMYRAPjXZziB4f9hq"
+            ]
+          }
+        },
+        {
+          "Id": "aVDNLVQRVVVqHnMFaNcroIkR7ft1",
+          "Access": {
+            "Permission": 1,
+            "ReportIds": [
+              "H1nWYmk8CgzRtxp1vt6p"
             ]
           }
         }
