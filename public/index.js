@@ -41,6 +41,9 @@ import {
   uploadBytesResumable
 } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-storage.js';
 
+// import data from './data.json' assert { type: 'json' };
+// console.log(data);
+
 const auth = getAuth(app);
 const db = getFirestore(app);
 
@@ -73,41 +76,6 @@ async function main() {
     autoSignOutComplete = true;
 
   });
-
-  // fires on auth state change AND initial start (could be before document ready)
-  // this can be confusing ... say prior to document ready a user shows as 'signed in'
-  // the AuthStateChanged fires before signoutFirebase() has run ( want user to sign in always )
-  onAuthStateChanged(auth, user => {
-    var signedIn = user != null && user.uid != null;
-    wrapperSignin.style.display = signedIn ? 'none' : 'block';
-    sectionReports.style.display = signedIn ? 'block' : 'none';
-
-    if(currentUser == user) {
-      // no change -> either signed in or not ... do nothing
-
-    }
-    else {
-      // changed, update currentUser and do something
-      // only log to the console a change if it was done manually
-      if(autoSignOutComplete) {
-        if (signedIn) {
-          console.log(`user ${user.uid} successfully signed in at ${new Date()}`);
-          userConfigs(); // <-- add new users
-
-          initialReportsLoad();
-          ///////// start realtime updates
-          // subscribeReportIteration();
-    
-        } else {
-          console.log(`user ${currentUser.uid} successfully signed out at ${new Date()}`);
-          wrapperSignin.style.display = 'block';
-          unsubscribeReportIteration();
-
-        }
-      }
-      currentUser = user;
-    }
-  });
   async function signinClicked() {
     
     resetSectionReports();
@@ -124,6 +92,38 @@ async function main() {
     });
 
   }
+  onAuthStateChanged(auth, user => {
+
+    var signedIn = user != null && user.uid != null;
+    wrapperSignin.style.display = signedIn ? 'none' : 'block';
+    sectionReports.style.display = signedIn ? 'block' : 'none';
+
+    if(currentUser == user) {
+      // no change -> either signed in or not ... do nothing
+
+    }
+    else {
+      // changed, update currentUser and do something
+      // only log to the console a change if it was done manually
+      if(autoSignOutComplete) {
+        if (signedIn) {
+          console.log(`user ${user.uid} successfully signed in at ${new Date()}`);
+          sectionUpload();
+
+          initialReportsLoad();
+          ///////// start realtime updates
+          // subscribeReportIteration();
+    
+        } else {
+          console.log(`user ${currentUser.uid} successfully signed out at ${new Date()}`);
+          wrapperSignin.style.display = 'block';
+          unsubscribeReportIteration();
+
+        }
+      }
+      currentUser = user;
+    }
+  });
   async function signoutClicked() {
 
     resetSectionReports()
@@ -165,14 +165,10 @@ async function main() {
       }
     });
 
-    // addReport('Ll62xGQgTNfODmdwWBse', lecap);
-    // addReport('7AJmtUU3ypXSlNhqYVch', panama);
-    // addReport('P9uiMYRAPjXZziB4f9hq', beaubien);
-    // addReport('H1nWYmk8CgzRtxp1vt6p', granby);
-
     var signedInUser_hasProfile = auth.currentUser.uid in accessByUser;
     if(signedInUser_hasProfile) {
       var userAccess = accessByUser[auth.currentUser.uid];
+      document.querySelector('#variants-upload-files').style.display = auth.currentUser.uid == 'A4fQrSN1OaNsTBP966dRGPM31ZX2' ? 'block' : 'none';
       var accessToAll = userAccess.ReportIds.length == 0;
       var accessLvl = userAccess.Permission;
       if(accessLvl >= 1) {
@@ -306,82 +302,6 @@ async function main() {
       }
 
     });
-
-    clone.querySelector('#div_files-chooseJSON').addEventListener('click', function() {
-      // click to choose new access config JSON -or- new report JSON
-      // addReport('abcdefghij', cranby);
-    });
-
-    //#region "file upload"
-    // perform a click on the input file to start the file explorer
-    // done this way since label for= doesn't register the files a user selected
-    var filesChoose_delegate = clone.querySelector('#div_files-choose');
-    var filesChoose = clone.querySelector('#files-choose');
-    var filesUpload = clone.querySelector('#div_files-upload');
-    var label_filesChoose = clone.querySelector('#label_files-choose');
-    var label_filesUpload = clone.querySelector('#label_files-upload');
-    filesChoose_delegate.addEventListener('click', function (e) {
-      // Get the target
-      const target = e.target;
-      // Get the bounding rectangle of target
-      const rect = target.getBoundingClientRect();
-      // Mouse position
-      const x = e.clientX;
-      const y = e.clientY;
-
-      var trash = clone.querySelector('#files-trash');
-      if(trash == null) {
-        filesChoose.click();
-      }
-      else {
-        var trashRect = trash.getBoundingClientRect();
-        if(x > trashRect.x & x < (trashRect.x + trashRect.width) & y > trashRect.y & y < (trashRect.y + trashRect.height)) {
-          /// clicked on the trashcan!
-          resetSelectUpload();
-        }
-        else {
-          filesChoose.click();
-        }
-      }
-    });
-    // the change event is fired when the file explorer returned selected file(s)
-    filesChoose.addEventListener('change', async function() {
-
-      var filenames = [];
-      for (var f = 0; f < filesChoose.files.length; f++) {
-        filenames.push(filesChoose.files[f].name);
-      }
-      if(filenames.length == 0) {
-        resetSelectUpload();
-      }
-      else {
-        label_filesUpload.style = "background-color: green; color: white";
-        label_filesChoose.innerHTML = `<i class="bi bi-trash" id="files-trash" style="font-size:24px;"></i>${filenames.join(' + ')}`;
-        clone.querySelector('#files-trash').addEventListener('click', function() {
-          label_filesUpload.innerHTML = '<i class="bi bi-cloud-arrow-up" style="font-size:24px; z-index: 1"></i>Upload';
-        })
-      }
-
-    });
-    filesUpload.addEventListener('click', async function() {
-
-      ////////// upload compressed photos of a completed room
-      label_filesUpload.style = "background-color: gold; color: black";
-      for (var f = 0; f < filesChoose.files.length; f++) {
-        var file = filesChoose.files[f];
-        await uploadFile(file, queryDoc.id);
-      }
-      label_filesUpload.style = "background-color: green; color: white";
-
-    });
-    function resetSelectUpload() {
-
-      filesChoose.value = '';
-      label_filesUpload.style = "color: black";
-      label_filesChoose.innerHTML = '<i class="bi bi-folder-plus" style="font-size:24px;"></i>Choose file(s)';
-
-    }
-    //#endregion
 
     var docDate = jobDoc.Date;
     var efs = jobDoc.Language; // English|French|Spanish
@@ -527,6 +447,138 @@ async function main() {
     rxcySetCellText(clone, 'r1c1_trainedStaff', docData.TrainedStaff.join(', '));
 
   }
+  async function sectionUpload() {
+
+    var filesChoose_delegate = document.querySelector('#div_files-choose');
+    var filesChoose = document.querySelector('#files-choose');
+    var filesUpload = document.querySelector('#div_files-upload');
+    var label_filesChoose = document.querySelector('#label_files-choose');
+    var label_filesUpload = document.querySelector('#label_files-upload');
+    filesChoose_delegate.addEventListener('click', function (e) {
+      // Get the target
+      const target = e.target;
+      // Get the bounding rectangle of target
+      const rect = target.getBoundingClientRect();
+      // Mouse position
+      const x = e.clientX;
+      const y = e.clientY;
+
+      var trash = document.querySelector('#files-trash');
+      if(trash == null) {
+        filesChoose.click();
+      }
+      else {
+        var trashRect = trash.getBoundingClientRect();
+        if(x > trashRect.x & x < (trashRect.x + trashRect.width) & y > trashRect.y & y < (trashRect.y + trashRect.height)) {
+          /// clicked on the trashcan!
+          filesChoose.value = '';
+          label_filesUpload.style = "color: black";
+          label_filesChoose.innerHTML = '<i class="bi bi-folder-plus" style="font-size:24px;"></i>Choose file(s)';
+        }
+        else {
+          filesChoose.click();
+        }
+      }
+    });
+    // the change event is fired when the file explorer returned selected file(s)
+    filesChoose.addEventListener('change', async function() {
+
+      document.querySelector('#row_files-message').style.display = 'none';
+      document.querySelector('#label_files-message').innerHTML = '';
+
+      // supported file types:
+      // ---------------------
+      // specific to a job --> [pdf, png, jpg, txt, csv]
+      // global --> [json] ( add new report or update access configs )
+
+      var acceptedTypes = ['pdf', 'png', 'jpg', 'txt', 'csv', 'json'];
+      var acceptedFiles = [];
+      var acceptedFileTypes = [];
+      var rejectedFiles = [];
+      for (var f = 0; f < filesChoose.files.length; f++) {
+        var nameType = fileNameType(filesChoose.files[f].name);
+        // var fileName = nameType[0];
+        var fileType = nameType[1];
+        var file_NameType = nameType.join('.');
+        if(acceptedTypes.includes(fileType)) {
+          acceptedFiles.push(file_NameType)
+          acceptedFileTypes.push(fileType);
+        }
+        else {
+          rejectedFiles.push(file_NameType);
+        }
+      }
+      if(rejectedFiles.length > 0) {
+        document.querySelector('#row_files-message').style.display = 'block';
+        document.querySelector('#label_files-message').innerHTML = `The following files are not accepted: <mark>${rejectedFiles.join('*')}</mark>`;
+      }
+      if(acceptedFiles.length > 0) {
+
+        var acceptedString = acceptedFiles.join(' + ');
+        label_filesChoose.innerHTML = `<i class="bi bi-trash" id="files-trash" style="font-size:24px;"></i>${acceptedString}`;
+        document.getElementById('label_files-upload').innerHTML = '<i class="bi bi-cloud-check-fill" id="i_files-upload"></i>Upload';
+        console.log(`Selected files: ${acceptedString}`);
+        document.querySelector('#files-trash').addEventListener('click', function() {
+          label_filesUpload.innerHTML = '<i class="bi bi-cloud-arrow-up" style="font-size:24px; z-index: 1"></i>Upload';
+        })
+
+      }
+
+    });
+    filesUpload.addEventListener('click', async function() {
+
+      ////////// upload compressed photos of a completed room
+      var uploadButton = document.getElementById('label_files-upload');
+      var canUpload = uploadButton.innerHTML.includes('bi-cloud-check-fill');
+      // console.log(canUpload ? 'ok to upload' : 'not ok to upload');
+      if(canUpload) {
+
+        var typesJob = ['pdf', 'png', 'jpg', 'txt', 'csv']; // specific to a job
+        var typesGlobal = ['json']; // global config files
+        var filesJob = [];
+        var filesGlobal = [];
+
+        for (var f = 0; f < filesChoose.files.length; f++) {
+          var file = filesChoose.files[f];
+          var nameType = fileNameType(file.name);
+          if(typesJob.includes(nameType[1])) {
+            filesJob.push(file);
+          }
+          else if(typesGlobal.includes(nameType[1])) {
+            filesGlobal.push(file);
+          }
+
+          if(filesJob.length > 0) {
+
+            // there are files that are specific to a job ... is a detail section open?
+            var details = [].slice.call(document.getElementsByTagName('details'));
+            var oneDetails = details.filter(d => d.hasAttribute("open"));
+            if(oneDetails.length == 1) {
+              document.querySelector('#row_files-message').style.display = 'none';
+              document.querySelector('#label_files-message').innerHTML = '';
+              for(var f = 0; f < filesJob.length; f++) {
+                var file = filesJob[f];
+                await uploadFile(file, oneDetails[0].id);
+              }
+            }
+            else {
+              document.querySelector('#row_files-message').style.display = 'block';
+              document.querySelector('#label_files-message').innerHTML = 'You have selected files that are specific to a job, but no job section is opened. Open the ONE job section for which these files belong and click "Upload" again';
+            }
+
+          }
+          if(filesGlobal.length > 0) {
+            // these are global files - either a user config or a report document
+            for(var f = 0; f < filesGlobal.length; f++) {
+              var jsonFile = filesGlobal[f];
+              await uploadFile(jsonFile, null);
+            }
+          }
+        }
+      }
+
+    });
+  }
 
 // misc functions
   function createGUID() {
@@ -607,80 +659,135 @@ async function main() {
   }
   async function uploadFile(file, id) {
 
-    var filename = `sean/files/${id}/${file.name}`;
-    const storage = getStorage();
-    const storageRef = ref(storage, filename);
+    if(id == null) {
+      
+      // global upload - json files only [userAccess, newReport] --> firestore
+      var reader = new FileReader();
+      reader.onload = onReaderLoad;
+      reader.readAsText(file);
 
-    // below reference for contentType:
-    // https://stackoverflow.com/questions/23714383/what-are-all-the-possible-values-for-http-content-type-header
-    
-    /////////////// supported types for this application
-    // application/json
-    // application/pdf
-    // application/zip
-    // image/gif * no
-    // image/jpeg
-    // image/png
-    // text/csv
-    // text/html
-    // text/plain
+      async function onReaderLoad(event) {
+        var jsonString = event.target.result;
+        var obj = JSON.parse(jsonString);
+        try {
+          var obj = JSON.parse(jsonString);
+          if(obj.Document != null) {
+            // newReport
+            // check if a report exists with the same document
+            var reports = [];
+            var q = query(collection(db, 'reports'), orderBy('Document.Date', 'desc'));
+            const querySnapshot = await getDocs(q);
+            querySnapshot.forEach((doc) => {
+              reports[doc.data().ContactInfo.Organisation] = doc;
+            });
+            var organisation = obj.ContactInfo.Organisation;
+            var orgExists = organisation in reports;
+            var orgKey = orgExists ? reports[organisation].id : createGUID().replace(/-/g, '').substring(0, 20);
+            const response = await addReport(orgKey, obj);
+            console.log((response[0] ? 'Successfully ' + (orgExists ? 'replaced' : 'uploaded') : 'Failed to ' + (orgExists ? 'replace' : 'upload')) + ` ${organisation}`);
 
-    var dots = file.name.split('.');
-    var extension = dots[dots.length - 1].toLowerCase();
-    var applicationTypes = ['json', 'pdf', 'zip'];
-    var imageTypes = ['jpeg', 'png'];
-    var textTypes = ['csv', 'html', 'txt'];
-    var content = applicationTypes.includes(extension) ? 'application' : imageTypes.includes(extension) ? 'image' : textTypes.includes(extension) ? 'text' : '';
-    if(content.length == 0) return;
-    else {
-      content = `${content}/${extension}`;
-      const metadata = {
-        contentType: content,
-      };
-      // Upload the file and metadata
-      const uploadTask = await uploadBytesResumable(storageRef, file, metadata);
-      // Listen for state changes, errors, and completion of the upload.
-      uploadTask.task.on('state_changed',
-      (snapshot) => {
-        // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        console.log('Upload is ' + progress + '% done');
-        switch (snapshot.state) {
-          case 'paused':
-            console.log('Upload is paused');
-            break;
-          case 'running':
-            console.log('Upload is running');
-            break;
+          }
+          else if(obj.Users != null) {
+            // userAccess
+            const response = await updateAccess(obj);
+            console.log((response[0] ? 'Successfully replaced' : 'Failed to replace') + 'config file');
+
+          }
         }
-      }, 
-      (error) => {
-        // A full list of error codes is available at
-        // https://firebase.google.com/docs/storage/web/handle-errors
-        switch (error.code) {
-          case 'storage/unauthorized':
-            // User doesn't have permission to access the object
-            break;
-          case 'storage/canceled':
-            // User canceled the upload
-            break;
-          case 'storage/unknown':
-            // Unknown error occurred, inspect error.serverResponse
-            break;
-        }
-      }, 
-      () => {
-        // Upload completed successfully, now we can get the download URL
-        getDownloadURL(uploadTask.task.snapshot.ref).then((downloadURL) => {
-          console.log('File available at', downloadURL);
-        });
+        catch(error) {console.log(error)}
       }
-      );
-    }
 
+    }
+    else {
+
+      // job specific upload - supporting files [pdf, png, jpg] --> storage
+      var filename = `sean/files/${id}/${file.name}`;
+      const storage = getStorage();
+      const storageRef = ref(storage, filename);
+
+      // below reference for contentType:
+      // https://stackoverflow.com/questions/23714383/what-are-all-the-possible-values-for-http-content-type-header
+      
+      /////////////// supported types for this application
+      // application/json
+      // application/pdf
+      // application/zip
+      // image/gif * no
+      // image/jpeg
+      // image/png
+      // text/csv
+      // text/html
+      // text/plain
+
+      var file_NameType = fileNameType(file.name);
+      var extension = file_NameType[1];
+      var applicationTypes = ['json', 'pdf', 'zip'];
+      var imageTypes = ['jpg', 'png'];
+      var textTypes = ['csv', 'html', 'txt'];
+      var content = applicationTypes.includes(extension) ? 'application' : imageTypes.includes(extension) ? 'image' : textTypes.includes(extension) ? 'text' : '';
+
+      if(content.length == 0) return;
+      else {
+        content = `${content}/${extension}`;
+        const metadata = {
+          contentType: content,
+        };
+        // Upload the file and metadata
+        const uploadTask = await uploadBytesResumable(storageRef, file, metadata);
+        // Listen for state changes, errors, and completion of the upload.
+        uploadTask.task.on('state_changed',
+        (snapshot) => {
+          // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log('Upload is ' + progress + '% done');
+          switch (snapshot.state) {
+            case 'paused':
+              console.log('Upload is paused');
+              break;
+            case 'running':
+              console.log('Upload is running');
+              break;
+          }
+        }, 
+        (error) => {
+          // A full list of error codes is available at
+          // https://firebase.google.com/docs/storage/web/handle-errors
+          switch (error.code) {
+            case 'storage/unauthorized':
+              // User doesn't have permission to access the object
+              console.log("User doesn't have permission to access the object");
+              break;
+            case 'storage/canceled':
+              // User canceled the upload
+              console.log("User canceled upload");
+              break;
+            case 'storage/unknown':
+              // Unknown error occurred, inspect error.serverResponse
+              console.log("Unknown error occurred");
+              break;
+          }
+        }, 
+        () => {
+          // Upload completed successfully, now we can get the download URL
+          getDownloadURL(uploadTask.task.snapshot.ref).then((downloadURL) => {
+            console.log('File available at', downloadURL);
+          });
+        }
+        );
+      }
+
+    }
   }
 
   // misc firestore
+  function fileNameType(fileName) {
+    var nameType = [];
+    var fileDots = fileName.split('.');
+    var fileType = fileDots[fileDots.length - 1].toLowerCase();
+    nameType.push(fileDots.slice(0, fileDots.length - 1).join('.'));
+    nameType.push(fileType);
+    return nameType;
+  }
   async function copyFirestore() {
 
     /////////////// from query -> doc ??
@@ -699,79 +806,39 @@ async function main() {
     });
 
   }
-  async function userConfigs() {
+  async function addReport(reportId, reportJSON) {
 
-    const destDoc = doc(db, 'access', 'b9NbHHku509AEMHjF6Kw'); // update
-    var currentAccesses = {
-      "Users": [
-        {
-          "Id": "A4fQrSN1OaNsTBP966dRGPM31ZX2",
-          "Access": {
-            "Permission": 2,
-            "ReportIds": []
-          }
-        },
-        {
-          "Id": "GjicU8Ixl7b3GGV9Tn1nEyyKtD03",
-          "Access": {
-            "Permission": 1,
-            "ReportIds": []
-          }
-        },
-        {
-          "Id": "b9qSXlPWDhYnoXRKGq1qv34arEM2",
-          "Access": {
-            "Permission": 1,
-            "ReportIds": []
-          }
-        },
-        {
-          "Id": "6r1rEItvtog8uA04TVQmieQ3CnC2",
-          "Access": {
-            "Permission": 1,
-            "ReportIds": [
-              "7AJmtUU3ypXSlNhqYVch"
-            ]
-          }
-        },
-        {
-          "Id": "7DsUGuz3rOhDkxStsZ8pbeu1mvB3",
-          "Access": {
-            "Permission": 1,
-            "ReportIds": [
-              "Ll62xGQgTNfODmdwWBse"
-            ]
-          }
-        },
-        {
-          "Id": "0vN2c6B9pzgnKa3bYeP7nbVjjyf2",
-          "Access": {
-            "Permission": 1,
-            "ReportIds": [
-              "P9uiMYRAPjXZziB4f9hq"
-            ]
-          }
-        },
-        {
-          "Id": "aVDNLVQRVVVqHnMFaNcroIkR7ft1",
-          "Access": {
-            "Permission": 1,
-            "ReportIds": [
-              "H1nWYmk8CgzRtxp1vt6p"
-            ]
-          }
-        }
-      ]
-    };
-    setDoc(destDoc, currentAccesses, { merge:true })
+    var response = [];
+    const destDoc = doc(db, 'reports', reportId);
+    var request = await setDoc(destDoc, reportJSON, { merge:true })
     .then(destDoc => {
-        console.log(`Users imported successfully`);
+      response.push(true);
+      response.push(reportJSON);
     })
     .catch(error => {
-        console.log(error);
+      response.push(false);
+      response.push(error);
     })
+    return response;
 
   }
+  async function updateAccess(latestUserList) {
+
+    var response = [];
+    const destDoc = doc(db, 'access', 'b9NbHHku509AEMHjF6Kw'); // update
+    var request = await setDoc(destDoc, latestUserList, { merge:true })
+    .then(destDoc => {
+      response.push(true);
+      response.push(latestUserList);
+    })
+    .catch(error => {
+      response.push(false);
+      response.push(error);
+    })
+    return response;
+
+  }
+  // json files
   const panama =
   {
     "Document": {
@@ -1767,17 +1834,66 @@ async function main() {
       "Feedback": ""
     }
   }
-  async function addReport(reportId, reportJSON) {
-
-    const destDoc = doc(db, 'reports', reportId);
-    setDoc(destDoc, reportJSON, { merge:true })
-    .then(destDoc => {
-        console.log(`Document added successfully`);
-    })
-    .catch(error => {
-        console.log(error);
-    })
-
-  }
+  const currentAccesses = {
+    "Users": [
+      {
+        "Id": "A4fQrSN1OaNsTBP966dRGPM31ZX2",
+        "Access": {
+          "Permission": 2,
+          "ReportIds": []
+        }
+      },
+      {
+        "Id": "GjicU8Ixl7b3GGV9Tn1nEyyKtD03",
+        "Access": {
+          "Permission": 1,
+          "ReportIds": []
+        }
+      },
+      {
+        "Id": "b9qSXlPWDhYnoXRKGq1qv34arEM2",
+        "Access": {
+          "Permission": 1,
+          "ReportIds": []
+        }
+      },
+      {
+        "Id": "6r1rEItvtog8uA04TVQmieQ3CnC2",
+        "Access": {
+          "Permission": 1,
+          "ReportIds": [
+            "7AJmtUU3ypXSlNhqYVch"
+          ]
+        }
+      },
+      {
+        "Id": "7DsUGuz3rOhDkxStsZ8pbeu1mvB3",
+        "Access": {
+          "Permission": 1,
+          "ReportIds": [
+            "Ll62xGQgTNfODmdwWBse"
+          ]
+        }
+      },
+      {
+        "Id": "0vN2c6B9pzgnKa3bYeP7nbVjjyf2",
+        "Access": {
+          "Permission": 1,
+          "ReportIds": [
+            "P9uiMYRAPjXZziB4f9hq"
+          ]
+        }
+      },
+      {
+        "Id": "aVDNLVQRVVVqHnMFaNcroIkR7ft1",
+        "Access": {
+          "Permission": 1,
+          "ReportIds": [
+            "H1nWYmk8CgzRtxp1vt6p"
+          ]
+        }
+      }
+    ]
+  };
 }
 main();

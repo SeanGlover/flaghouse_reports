@@ -58,6 +58,36 @@
           </form>
           <p class="account-signup">Don't have an account? <a href="#">Sign up here</a>
       </div>
+      <div class="variants" id="variants-upload-files" style="display: none;">
+        <table style="margin-bottom: 5px;">
+          <input class='file' id="files-choose" style="display: none;" type="file" multiple/>
+          <tr id="row_files-message" style="display: none;">
+            <td>
+              <label id="label_files-message" style="color: crimson;">Here is a message</label>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class='file' id="div_files-choose">
+                <label id="label_files-choose">
+                  <i class="bi bi-folder-plus"></i>Choose file(s)
+                </label>
+              </div>
+            </td>
+            <td>
+              <div class='file file--upload' id="div_files-upload">
+                <label id="label_files-upload">
+                  <i class="bi bi-cloud-upload" id="i_files-upload"></i>
+                  Upload
+                </label>
+              </div>
+            </td>
+            <td>
+
+            </td>
+          </tr>
+        </table>
+      </div>
          
       <section id="sectionReports" style="display: none;">
         <div class="row" style="padding: 0px 0px 0px 0px; margin: 0px;">
@@ -68,7 +98,7 @@
             <button class="btn btn-lg btn-primary btn-block" id="signout">Sign out</button>
           </div>
         </div>
-        
+       
         <details id = "detailsTemplate" style="display: none;">
           <summary id="detailSummary">
           </summary>
@@ -417,37 +447,8 @@
               </div>
 
               <div class="col-12" style="padding-bottom: 10px;">
-                <div class="variants" style="display: none;">
-
-                  <input class='file' id="files-choose" style="display: none;" type="file" multiple/>
-
-                  <div class='file' id="div_files-chooseJSON">
-                    <label id="label_files-chooseJSON">
-                      <i class="bi bi-folder-plus" style="font-size:24px;"></i>Choose file(s)
-                    </label>
-                  </div>
-                  <div class='file file--upload' id="div_files-uploadJSON">
-                    <label id="label_files-uploadJSON">
-                      <i class="bi bi-cloud-arrow-up" style="font-size:24px;"></i>Upload
-                    </label>
-                  </div>
-
-                  <div class='file' id="div_files-choose">
-                    <label id="label_files-choose">
-                      <i class="bi bi-folder-plus" style="font-size:24px;"></i>Choose file(s)
-                    </label>
-                  </div>
-                  <div class='file file--upload' id="div_files-upload">
-                    <label id="label_files-upload">
-                      <i class="bi bi-cloud-arrow-up" style="font-size:24px;"></i>Upload
-                    </label>
-                  </div>
-                  
-                </div>
-
                 <div class="row" style="color: red; font-weight: bolder; padding: 6px 0px 0px 0px; margin: 0px; display: none;" id="submitWarning">
                 </div>
-                <!-- submit_form -- change type="button" back to type="submit" -->
                 <button class="button-success pure-button button-xlarge" type="submit" style="background-color: #55acee; padding: 10px 30px 10px 30px;" id="submitForm">
                   <div class="row" style="padding: 6px 0px 0px 0px; margin: 0px;">
                     <div class="col-lg-3 col-sm-3">
