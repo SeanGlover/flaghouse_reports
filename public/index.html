@@ -75,10 +75,18 @@
               </div>
             </td>
             <td>
-              <div class='file file--upload' id="div_files-upload">
+              <div class='file file--upload' id="div_files-upload" style="min-width: 200px;">
                 <label id="label_files-upload">
                   <i class="bi bi-cloud-upload" id="i_files-upload"></i>
                   Upload
+                  <div class="progress" style="height: 20px; width: 200px; margin-left: 5px;">
+                    <div class="progress-bar bg-success" id="upload-progress"
+                    role="progressbar"
+                    style="width: 0%;"
+                    aria-valuemin="0"
+                    aria-valuemax="100">0%
+                    </div>
+                  </div>
                 </label>
               </div>
             </td>
@@ -361,7 +369,7 @@
               <div class="container d-flex justify-content-center align-items-center">
                 <div class="card h-100 p-3">
                   <!-- readonly stars (25px) -->
-                  <table id="starsOverall" style="font-size: x-large">
+                  <table style="font-size: x-large">
                     <tr>
                       <td style="align-items: center;">
                         <td><img src="images/starEmpty.png" id="1-overall" width="25" height="25"></td>
@@ -370,7 +378,7 @@
                         <td><img src="images/starEmpty.png" id="4-overall" width="25" height="25"></td>
                         <td><img src="images/starEmpty.png" id="5-overall" width="25" height="25"></td>
                       </td>
-                      <td id="ratingOverallLabel" style="text-align: center; font-weight: bolder;">
+                      <td id="starsOverall" style="text-align: center; font-weight: bolder;">
                         Overall rating
                       </td>
                     </tr>
@@ -418,15 +426,15 @@
                       </td>
                     </tr>
                     <tr>
-                      <td>
+                      <td id="starsClient">
                         <input style="max-height: 36px; font-size:large" type="text" class="form-control" name="starsOther" id="starsOtherInput" aria-describedby="inputGroupPrepend" placeholder="Optional input - type your criteria">
                       </td>
-                      <td id="starsClient">
-                        <td><img src="images/starEmpty.png" id="1-other" width="20" height="20"></td>
-                        <td><img src="images/starEmpty.png" id="2-other" width="20" height="20"></td>
-                        <td><img src="images/starEmpty.png" id="3-other" width="20" height="20"></td>
-                        <td><img src="images/starEmpty.png" id="4-other" width="20" height="20"></td>
-                        <td><img src="images/starEmpty.png" id="5-other" width="20" height="20"></td>
+                      <td>
+                        <td><img src="images/starEmpty.png" id="1-client" width="20" height="20"></td>
+                        <td><img src="images/starEmpty.png" id="2-client" width="20" height="20"></td>
+                        <td><img src="images/starEmpty.png" id="3-client" width="20" height="20"></td>
+                        <td><img src="images/starEmpty.png" id="4-client" width="20" height="20"></td>
+                        <td><img src="images/starEmpty.png" id="5-client" width="20" height="20"></td>
                       </td>
                     </tr>
                   </table>
@@ -562,8 +570,7 @@
           fillStars(allStars25, Math.ceil(avgOverall), ehf);
 
           var ratingLabel = starsCard.querySelector("#overallRatingLabel");
-          // var frenchOrEnglish = $.trim(regexMatch(ratingLabel, /[a-z ]{1,}/gi));
-          // $("#overallRatingLabel").html(frenchOrEnglish + ' ' + overall);            
+         
         }
       });
       function auto_grow(element)
@@ -612,7 +619,7 @@
             var sibling = siblings[i];
             sibling.setAttribute('src', 'images/starEmpty.png');
           }
-          // fill in the stars as half or full                    
+          // set each whole value as star full
           for (var i = 0; i < clickedIndex - 1; i++) {
             sibling = siblings[i];
             sibling.setAttribute('src', 'images/starFill.png');

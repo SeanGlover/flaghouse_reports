@@ -112,7 +112,7 @@ async function main() {
 
           initialReportsLoad();
           ///////// start realtime updates
-          // subscribeReportIteration();
+          subscribeReportIteration();
     
         } else {
           console.log(`user ${currentUser.uid} successfully signed out at ${new Date()}`);
@@ -258,15 +258,15 @@ async function main() {
             var starValue = ehf == 'Fill' ? 1 : ehf == 'Half' ? .5 : 0;
             sumStars += starValue;
           }
-          var description = null;
+          var catId = null;
           if(row20.querySelector('input') == null) {
-            description = row20.querySelector('td').innerHTML;
+            catId = row20.querySelector('td').id;
           }
           else {
-            description = row20.querySelector('input').value.trim();
-            if(description == '') { description = 'optionalInput'}
+            catId = row20.querySelector('input').value.trim();
+            if(catId == '') { catId = 'starsClient'}
           }
-          dict[description] = sumStars;
+          dict[catId] = sumStars;
         }
 
         const feedback = {
@@ -367,7 +367,7 @@ async function main() {
     clone.querySelector('#signDateLabel').innerText = efs == 1 ? 'Dated' : efs == 2 ? 'Daté' : 'Fechado';
 
     //Stars
-    clone.querySelector('#ratingOverallLabel').innerText = efs == 1 ? 'Overall rating' : efs == 2 ? 'Évaluation globale' : 'Valoración general';
+    clone.querySelector('#starsOverall').innerText = efs == 1 ? 'Overall rating' : efs == 2 ? 'Évaluation globale' : 'Valoración general';
     clone.querySelector('#starsProfessional').innerText = efs == 1 ? 'Installer professional' : efs == 2 ? 'Professionnalisme de l’installateur' : 'X del instalador';
     clone.querySelector('#starsPrompt').innerText = efs == 1 ? 'Installer promptness' : efs == 2 ? "Promptitude d'installateur" : 'Prontitud del instalador';
     clone.querySelector('#starsWorkmanship').innerText = efs == 1 ? 'Installer workmanship' : efs == 2 ? 'Niveau de qualité du travail' : 'Mano de obra del instalador';
@@ -389,12 +389,45 @@ async function main() {
       submitWarning.style.display = 'none';
     }
     else {
+
+      clone.querySelector('#clientComments').innerText = clientResponse.Feedback.comments;
+      clone.querySelector('#clientComments').style = "font-weight: bold;"
+      clone.querySelector('#clientSignature').value = clientResponse.Submitter;
+      clone.querySelector('#clientSignature').style = "font-weight: bold;"
+      clone.querySelector('#signDate').style = "font-weight: bold;"
+
+      /// now for the stars
+      const clientStars = clientResponse.Feedback.stars; // dictionary
+      const catStars = clone.querySelectorAll('td[id^="stars"]:not([id$="Overall"])');
+      const catNames = Array.from(catStars).map(function(s) {return s.id});
+      const clientInput = Object.keys(clientStars).filter(value => !catNames.includes(value));
+      if(clientInput.length > 0) {
+        clone.querySelector('#starsOtherInput').value = clientInput[0];
+      }
+      Object.keys(clientStars).forEach(starKey => {
+        var rating = clientStars[starKey];
+        var starId = catNames.includes(starKey) ? starKey : 'starsClient';
+        var starCat = clone.querySelector('#' + starId);
+        var stars = starCat.closest('tr').querySelectorAll('img');
+        // fill each star for whole ratings
+        for (var s = 0; s < Math.floor(rating); s++) {
+          var star = stars[s];
+          star.setAttribute('src', 'images/starFill.png');
+        }
+        // is last star Half?
+        if(rating - Math.floor(rating) > 0) {
+          var lastStar = stars[Math.ceil(rating) - 1];
+          lastStar.setAttribute('src', 'images/starHalf.png');
+        }
+        console.log(`Category: ${starKey.replace('stars', '')}: ${rating}`);
+      });
+
+      // already submitted once warning... submit again / overwrite?
       submitWarning.style.display = 'block';
-      var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
       var tmstmp = new Date(clientResponse.Date.seconds * 1000);
-      var match = /20[0-9]{2} [0-2][0-9]:[0-5][0-9]:[0-5][0-9]/g.exec(tmstmp);
       var dateString = tmstmp.toLocaleString(efs == 1 ? 'en-US' : efs == 2 ? 'fr-FR' : 'es-MX', { month: 'long', day: 'numeric', year: 'numeric' });
       submitWarning.innerText = efs == 1 ? `Submitted ${dateString} ... overwrite?` : efs == 2 ? `Soumis le ${dateString} ... réécriture?` : `Enviado el ${dateString} ... sobrescribir?`;
+
     }
 
     summaryClone.style.borderLeft = '15px solid grey';
@@ -514,12 +547,13 @@ async function main() {
       }
       if(acceptedFiles.length > 0) {
 
+        var progressBarHTML = '<div class="progress" style="height: 20px; width: 200px; margin-left: 5px;"><div class="progress-bar bg-success" id="upload-progress" role="progressbar" style="width: 0%;" aria-valuemin="0" aria-valuemax="100">0%</div></div>'
         var acceptedString = acceptedFiles.join(' + ');
         label_filesChoose.innerHTML = `<i class="bi bi-trash" id="files-trash" style="font-size:24px;"></i>${acceptedString}`;
-        document.getElementById('label_files-upload').innerHTML = '<i class="bi bi-cloud-check-fill" id="i_files-upload"></i>Upload';
+        document.getElementById('label_files-upload').innerHTML = '<i class="bi bi-cloud-check-fill" id="i_files-upload"></i>Upload' + progressBarHTML;
         console.log(`Selected files: ${acceptedString}`);
         document.querySelector('#files-trash').addEventListener('click', function() {
-          label_filesUpload.innerHTML = '<i class="bi bi-cloud-arrow-up" style="font-size:24px; z-index: 1"></i>Upload';
+          label_filesUpload.innerHTML = '<i class="bi bi-cloud-arrow-up" style="font-size:24px; z-index: 1"></i>Upload' + progressBarHTML;
         })
 
       }
@@ -700,81 +734,7 @@ async function main() {
     }
     else {
 
-      // job specific upload - supporting files [pdf, png, jpg] --> storage
-      var filename = `sean/files/${id}/${file.name}`;
-      const storage = getStorage();
-      const storageRef = ref(storage, filename);
-
-      // below reference for contentType:
-      // https://stackoverflow.com/questions/23714383/what-are-all-the-possible-values-for-http-content-type-header
-      
-      /////////////// supported types for this application
-      // application/json
-      // application/pdf
-      // application/zip
-      // image/gif * no
-      // image/jpeg
-      // image/png
-      // text/csv
-      // text/html
-      // text/plain
-
-      var file_NameType = fileNameType(file.name);
-      var extension = file_NameType[1];
-      var applicationTypes = ['json', 'pdf', 'zip'];
-      var imageTypes = ['jpg', 'png'];
-      var textTypes = ['csv', 'html', 'txt'];
-      var content = applicationTypes.includes(extension) ? 'application' : imageTypes.includes(extension) ? 'image' : textTypes.includes(extension) ? 'text' : '';
-
-      if(content.length == 0) return;
-      else {
-        content = `${content}/${extension}`;
-        const metadata = {
-          contentType: content,
-        };
-        // Upload the file and metadata
-        const uploadTask = await uploadBytesResumable(storageRef, file, metadata);
-        // Listen for state changes, errors, and completion of the upload.
-        uploadTask.task.on('state_changed',
-        (snapshot) => {
-          // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log('Upload is ' + progress + '% done');
-          switch (snapshot.state) {
-            case 'paused':
-              console.log('Upload is paused');
-              break;
-            case 'running':
-              console.log('Upload is running');
-              break;
-          }
-        }, 
-        (error) => {
-          // A full list of error codes is available at
-          // https://firebase.google.com/docs/storage/web/handle-errors
-          switch (error.code) {
-            case 'storage/unauthorized':
-              // User doesn't have permission to access the object
-              console.log("User doesn't have permission to access the object");
-              break;
-            case 'storage/canceled':
-              // User canceled the upload
-              console.log("User canceled upload");
-              break;
-            case 'storage/unknown':
-              // Unknown error occurred, inspect error.serverResponse
-              console.log("Unknown error occurred");
-              break;
-          }
-        }, 
-        () => {
-          // Upload completed successfully, now we can get the download URL
-          getDownloadURL(uploadTask.task.snapshot.ref).then((downloadURL) => {
-            console.log('File available at', downloadURL);
-          });
-        }
-        );
-      }
+      uploadTaskPromise(file, id);
 
     }
   }
@@ -838,6 +798,93 @@ async function main() {
     return response;
 
   }
+
+  async function uploadTaskPromise(file, id) {
+
+    var progressBar = document.querySelector('#upload-progress');
+    progressBar.style.width = `${0}%`;
+    progressBar.innerText = `${0}%`;
+    return new Promise(function(resolve, reject) {
+
+      // job specific upload - supporting files [pdf, png, jpg] --> storage
+      var filepath = `sean/files/${id}/${file.name}`;
+      const storage = getStorage();
+      const storageRef = ref(storage, filepath);
+      
+      // below reference for contentType:
+      // https://stackoverflow.com/questions/23714383/what-are-all-the-possible-values-for-http-content-type-header
+      
+      /////////////// supported types for this application
+      // application/json
+      // application/pdf
+      // application/zip
+      // image/gif * no
+      // image/jpeg
+      // image/png
+      // text/csv
+      // text/html
+      // text/plain
+
+      var file_NameType = fileNameType(file.name);
+      var extension = file_NameType[1];
+      var applicationTypes = ['json', 'pdf', 'zip'];
+      var imageTypes = ['jpg', 'png'];
+      var textTypes = ['csv', 'html', 'txt'];
+      var content = applicationTypes.includes(extension) ? 'application' : imageTypes.includes(extension) ? 'image' : textTypes.includes(extension) ? 'text' : '';
+      
+      if(content.length == 0) return;
+      content = `${content}/${extension}`;
+      const metadata = {
+        contentType: content,
+      };
+      // Upload the file and metadata
+      const uploadTask = uploadBytesResumable(storageRef, file, metadata);
+
+      uploadTask.on('state_changed',
+        function(snapshot) {
+          var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+          progressBar.style.width = `${progress}%`;
+          progressBar.innerText = `${progress}%`;
+          console.log('Upload is ' + progress + '% done')
+
+          switch (snapshot.state) {
+            case 'paused':
+              console.log('Upload is paused');
+              break;
+            case 'running':
+              console.log('Upload is running');
+              break;
+          }
+        },
+        function error(err) {
+          // A full list of error codes is available at
+          // https://firebase.google.com/docs/storage/web/handle-errors
+          switch (err.code) {
+            case 'storage/unauthorized':
+              // User doesn't have permission to access the object
+              console.log("User doesn't have permission to access the object");
+              break;
+            case 'storage/canceled':
+              // User canceled the upload
+              console.log("User canceled upload");
+              break;
+            case 'storage/unknown':
+              // Unknown error occurred, inspect error.serverResponse
+              console.log("Unknown error occurred");
+              break;
+          }
+          reject();
+        },
+        function complete() {
+          // Upload completed successfully, now we can get the download URL
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            console.log('File available at', downloadURL);
+          })
+        }
+      )
+    })
+  }
+
   // json files
   const panama =
   {
