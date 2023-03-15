@@ -386,9 +386,14 @@ async function main() {
     var clientResponse = docData.ClientResponse;
     var submitWarning = clone.querySelector("#submitWarning");
     if(clientResponse == null) {
+
+      summaryClone.style.borderLeft = '15px solid grey';
       submitWarning.style.display = 'none';
+
     }
     else {
+
+      summaryClone.style = 'border-left: 15px solid darkgreen; background-color: green';
 
       clone.querySelector('#clientComments').innerText = clientResponse.Feedback.comments;
       clone.querySelector('#clientComments').style = "font-weight: bold;"
@@ -419,7 +424,7 @@ async function main() {
           var lastStar = stars[Math.ceil(rating) - 1];
           lastStar.setAttribute('src', 'images/starHalf.png');
         }
-        console.log(`Category: ${starKey.replace('stars', '')}: ${rating}`);
+        // console.log(`Category: ${starKey.replace('stars', '')}: ${rating}`);
       });
 
       // already submitted once warning... submit again / overwrite?
@@ -430,7 +435,6 @@ async function main() {
 
     }
 
-    summaryClone.style.borderLeft = '15px solid grey';
     clone.style = "display: block";
     sectionReports.appendChild(clone);
     clone.open = openReport; // show (or not) the section - if report.count == 1 --> open, otherwise user clicks to open
