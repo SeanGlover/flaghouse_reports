@@ -28,13 +28,7 @@
     <!-- mine -->
     <link rel="shortcut icon" href="images/fh.ico">
     <link rel="stylesheet" href="styles.css"/>
-    <!-- <script type="importmap">
-      { "imports": {
-          "firebase-app":   "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js",
-          "firebase-auth":  "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js",
-          "firestore":      "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"
-      } }
-    </script> -->
+
     <script type="module" src="index.js" defer></script>
   </head>
   <body style="font-family: 'Raleway', sans-serif;">
@@ -58,24 +52,25 @@
           </form>
           <p class="account-signup">Don't have an account? <a href="#">Sign up here</a>
       </div>
-      <div class="variants" id="variants-upload-files" style="display: none;">
+      
+      <div class="navbar drop-shadow" id="variants-upload-files" style="display: none;">
         <table style="margin-bottom: 5px;">
           <input class='file' id="files-choose" style="display: none;" type="file" multiple/>
           <tr id="row_files-message" style="display: none;">
             <td>
-              <label id="label_files-message" style="color: crimson;">Here is a message</label>
+              <label id="label_files-message" style="color: crimson;"></label>
             </td>
           </tr>
           <tr>
             <td>
-              <div class='file' id="div_files-choose">
+              <div class='xxx' id="div_files-choose">
                 <label id="label_files-choose">
                   <i class="bi bi-folder-plus"></i>Choose file(s)
                 </label>
               </div>
             </td>
             <td>
-              <div class='file file--upload' id="div_files-upload" style="min-width: 200px;">
+              <div class='xxx file-upload' id="div_files-upload" style="min-width: 200px;">
                 <label id="label_files-upload">
                   <i class="bi bi-cloud-upload" id="i_files-upload"></i>
                   Upload
@@ -91,7 +86,11 @@
               </div>
             </td>
             <td>
-
+              <div class='xxx' id="div_updateJSON">
+                <label id="label_updateJSON">
+                  <i class="bi bi-box-arrow-in-right"></i>Submit changes
+                </label>
+              </div>
             </td>
           </tr>
         </table>
@@ -124,7 +123,7 @@
                   <label for="businessName" class="form-label" id="businessNameLabel">Business name</label>
                   <input type="text" class="form-control" name="businessName" id="businessName" value="" required="">
                 </div>
-                <div class="col-md-4">
+                <div class="col-lg-3 col-md-3 col-sm-6">
                   <!-- purchase_order -->
                   <label for="purchaseOrder" class="form-label" id="purchaseOrderLabel">Purchase order</label>
                   <input type="text" class="form-control" name="purchaseOrder" id="purchaseOrder" value="" required="">
@@ -132,12 +131,65 @@
                     Please provide a valid street.
                   </div>
                 </div>
-                <div class="col-lg-3 col-sm-6">
+                <div class="col-lg-3 col-md-3 col-sm-6">
                   <!-- document_date -->
                   <label for="documentDate" id="documentDateLabel" class="form-label">Document date</label>
                   <div class="input-group">
                     <input id="documentDate" class="form-control" type="date" value="">
                   </div>
+                </div>
+                <div class="col-lg-3 col-md-3 col-sm-6" id="languageGrp">
+                  <label id="languageLabel" class="form-label">Document language</label>
+                  <div class="dropdown">
+                    <button class="dropbtn">
+                      <img id="languageIcon" height="30px;" width="30px;" src=https://cdn2.iconfinder.com/data/icons/world-flag-icons/128/Flag_of_United_Kingdom.png />
+                      <p id="languagePref">Language</p>
+                    </button>
+                    <div class="dropdown-content">
+                      <table>
+                        <tr class="row-language">
+                          <td>
+                            <img class="flag-language" src=https://cdn2.iconfinder.com/data/icons/world-flag-icons/128/Flag_of_United_Kingdom.png />
+                          </td>
+                          <td style="min-width: 150px;">
+                            English
+                          </td>
+                        </tr>
+                        <tr class="row-language">
+                          <td>
+                            <img class="flag-language" src=https://cdn2.iconfinder.com/data/icons/world-flag-icons/128/Flag_of_France.png />
+                          </td>
+                          <td>
+                            Français
+                          </td>
+                        </tr>
+                        <tr class="row-language">
+                          <td>
+                            <img class="flag-language" src=https://cdn2.iconfinder.com/data/icons/world-flag-icons/128/Flag_of_Spain.png />
+                          </td>
+                          <td>
+                            Español
+                          </td>
+                        </tr>
+                        <tr class="row-language">
+                          <td>
+                            <img class="flag-language" src=https://cdn2.iconfinder.com/data/icons/world-flag-icons/128/Flag_of_Italy.png />
+                          </td>
+                          <td>
+                            Italiano
+                          </td>
+                        </tr>
+                        <tr class="row-language">
+                          <td>
+                            <img class="flag-language" src=https://cdn2.iconfinder.com/data/icons/world-flag-icons/128/Flag_of_Germany.png />
+                          </td>
+                          <td>
+                            Deutsch
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+                  </div>    
                 </div>
               </div>
               <div class="row" style="padding: 6px 0px 0px 0px; margin: 0px;">
@@ -160,7 +212,7 @@
                 </div>
                 <div class="col-md-2">
                   <!-- provinces -->
-                  <label for="provinces" class="form-label">Province</label>
+                  <label for="provinces" class="form-label" id="addressProvinceLabel">Province</label>
                   <select class="form-select" id="provinces" value="Québec" required="" style="min-height: 45px;">
                     <option id="provincesLabel">Choose a province
                     </option><option id="AB" value="AB">Alberta
@@ -207,7 +259,7 @@
                   <!-- contact_email -->
                   <label for="contactEmail" class="form-label" id="contactEmailLabel">Contact email</label>
                   <div class="input-group has-validation">
-                    <span class="input-group-text" id="inputGroupPrepend"><i class="bi bi-envelope"></i></span>
+                    <!-- <span class="input-group-text" id="inputGroupPrepend"><i class="bi bi-envelope"></i></span> -->
                     <input type="text" class="form-control" id="contactEmail" value="" aria-describedby="inputGroupPrepend" required="">
                   </div>
                 </div>
@@ -480,29 +532,45 @@
                 <input id="honeypot" type="text" name="honeypot" value="">
               </fieldset>
             </form>
-            <form id="thankYouMessage" style="display: none">
-              <div class="jumbotron text-center">
-                <h1 class="display-3" id="thankYou">Thank You!</h1>
-                <p class="lead" id="appreciateIt"><strong>We have received your submission.</strong> We'll take it from here!</p>
-                <hr>
-                <button class="pure-button button-medium" id="reload" style="padding: 10px 30px 10px 30px;" onclick="window.location.reload();">
-                  <i class="fa fa-arrow-left"></i>
-                  &nbsp;Return to original form
-                </button>
-                <p id="visitUs">Visit us!<a href="https://www.flaghouse.ca/" id="homepage">Continue to homepage</a></p>
+
+            <div id='submittedMessage' style="display: none;">
+              <i class="fa-sharp fa-regular fa-location-dot"></i>
+              <div class='upper-side'>
+                <table>
+                  <tr>
+                    <td>
+                      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFgAAABYCAMAAABGS8AGAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAF0UExURdjqvOfy1vP56/3+/P////v9+PD35ePwz9PntO/25Ojy19vswfX57tDmr/T57ejz2PL46PH3593txeLwzvf78tnrv9Totd3sxP3++/X67vz9+t/uyOLvzs/lrf7//vj789Xot/T57Nzsw+Pw0Oby1eDuydLnsvT56+724+324fX679Lns+v03NHmsev03ez13/b68Orz29rrwNPntfz9+e/24/r89/r89u324OXx0+Tw0P///ur029Tot+Hvy+/35ODuyt7tx/7+/dHmsPP46tnqvfn89eTw0fn89NTotunz2vz++u724urz2vf78djqvdvrweXx0tbpuNXpuO314Nfqu9fpus/lruHvzN7txubx1Pv899vswuv03uLvzenz2N/uyfH45/r99/H46Oz13vb67/H36Onz2dzswuz03dTntOTx0fH35tXouPf68NPns9nrvur03PD35t3txPj79Pv9+dDlrufy1drrv/L46dbpuQAAAMCQ70IAAAB8dFJOU////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////wABatoxAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAE8UlEQVRYR6WZaWPVRBSG03boghZp0bYsLau4VCsiBUsRisWKgogKWLHiUrTuCyqi+fPOec+bZJLMTDK3zwfunDPnPOTm5mYmt1neh2xoeMSAPaNj40zG6RSPT6ixzl7OhomLn6LHx9OTLPITE++jIsgzLPQRFE+yOc4wq9uExGzsZj8bmvjFw+wiU9PMC5MHnmWajHGijk/8HDvA8AyzNWbnOA2YrOERH2S55ZDXqhxmjXCEOYe2mLWWKWZCzC+w0JijTFU0xcdYacxxZqKw1sJESUNcvT8mujjB8lZDXXySReYUEz04ypaGuSYeY0nfw1WeZ1O9yxVPs2CBcW/YVzM74tOcfoFxAux0zY6Yky8yTIK9jrkSc2qCYSLsfomhI+b9/GWGyWi7OcawFC9yguEANASFuJEeAH5n9zGk+BXNvqrRYCypY14jijX3mgaDohK+axWfcVNJvD5ihjgszGcxVrFm3sA4CXn75zjO82X1YAyx3trnkEhDFpLzHFvgMXDiH41llMgF6XuTgWUFIphEPIRoj4Rp4J3WFg+YSnEVpXFx1bZdYKBcgkq2BLsQv4W2y4wIcuKy4isYr+lEAth/XmVQ8DZk6xBjmH7A16SrtZC/A5k9FwOLTwW6kLb5LL+KkWfLEUW7GLggD7HuxJjuzYY0rTBweRe6zIoxSBXvl57rDOpAtzygWO+QDBpgyhTiaq3qwwm50ubeY9QAPiuewesss/04Jy3vM2iCSSte09cUbkhHcM94U4XZB/qaAO4Htxi00X1ank3pa390v/8hoza3Mb+e6U2eyT6g/iMGHj5GwSdZ6vfjuJTfYeBjHMK72S28Mllj5CYHLjjB1SrnQS+zexmOwCe+7lsF9ZNZZOTlLkpmMl4dbSTtrJPg00M2ubDJyM9n0mivivv62gb5zxkQnLfQsyjRFTTPtvDq+3piCV5mAL6QTPvJq44+1Rb3ipPMuugO37kAHsji2bmYo6sUH2S2xpd4rj3AKM/Fa+In2CJFldh/IR+RmbmvGOHu8jWDMFJlvum4H2/LQy0vuodS9q2OI+g2ecWK72AU2Bl/J3NnZLSJhR3JKKNSZusyfgVrn74Dnjtv2AGq7msyBuogjp4LfAGN2fkeV/APzMWQul7iH2US10PkHlyxF5U/QXwZ45850+Kw7prsh2g3Tp1oqR1YccchF4/uq31+IVzXWjuqxOFdITYRwY+3hv5UJF8iEf+CKHzI+bad/ZXjOJVJxAybO1KHHbPEUZzzEF2TIcSbiCOH3BfHAzET/Y4qgmr0vqpi3bXs9pB5+WigYv5fuzSrY1QDin/TZGxZ70QVxcFRXDxN/85wAPRqN1sMC/GuTwZPcLmul2LdZwxsPttsL8X5H82pFO6xuVovKnEumxGBYQrFL87OYu+Ii9Ocbn7AxkeMBVdcmv9k3JNHbPuLMaiJS3PHLqoOe8zfjJW6uCwyj5noRNcfywYTpCGuzOG/cNRgtTHbTBQ0xfosC3aYiaC7dqH17NAS5/+w1NLxO1x1DKa9HrbF+TyLhdXgzeMiK4QR5lw84mKbVNDe4k7y10biXdO8YuczIRtLa9npx5PjT8Ymim1GQeARNSDmI0o3sq3zEhJX95UYkceGsNjyL/sDRP9YEhXn+WLjD3AVl1gRokMsbLUO/GHgNxCXHmJl/r/b07NPehhBnv8PUG9YS4r83KsAAAAASUVORK5CYII=" alt="">
+                    </td>
+                    <td>
+                      <h3 id='submittedStatus'>Success</h3>
+                    </td>
+                    <td>
+                      <a class="contBtn" href="#" id="submittedReload">Close</a>
+                    </td>
+                    <td>
+                      <a class="contBtn" href="https://www.flaghouse.ca/" id="submittedRedirect">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        Redirect to official Flaghouse site
+                      </a>
+                    </td>
+                  </tr>
+                </table>
               </div>
-              <footer class="site-footer" id="footer">
-                <p class="site-footer__fineprint" id="fineprint">FlagHouse, Inc. | 50 East Wilmot Street, Suite 201 | Richmond Hill, ON L4B 3Z3 | Copyright ©2005 - 2023, All Rights Reserved</p>
-              </footer>
-            </form>
+              <div class='lower-side' id="submittedThanks">
+                Thanks! Your response has been sent. We'll take it from here!
+                <p style="background-color: rgb(239, 239, 239);">
+                  FlagHouse, Inc. | 50 East Wilmot Street, Suite 201 | Richmond Hill, ON L4B 3Z3 | Copyright ©2005 - 2023, All Rights Reserved
+                </p>
+              </div>
+            </div>
+
           </div>
         </details>
-
       </section>
-
     </div>
     <script>
       $(document).ready(function() {
+
         // document.getElementById('checkComplete').click();
         document.getElementById('agreeTermsCheck').click();
         var txts = document.getElementsByTagName('TEXTAREA');
@@ -520,6 +588,11 @@
         if (day < 10) day = "0" + day;
         var today = year + "-" + month + "-" + day;
         document.getElementById('signDate').value = today;
+        
+      });
+      $('body').on('click','.bi-eye',function(e) {
+        var creds_pwd = document.querySelector('#creds_pwd');
+        creds_pwd.type = creds_pwd.type == 'password' ? 'text' : 'password'; 
       });
       $('body').on('click','img',function(e){
         if (!this.id.endsWith('overall')) {

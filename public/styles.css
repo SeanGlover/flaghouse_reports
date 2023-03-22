@@ -1,3 +1,4 @@
+/* https://www.freecodecamp.org/news/how-to-use-sass-with-css/ */
 body {
     margin: 0;
     font-family: 'Raleway', 'Open Sans', sans-serif;
@@ -94,8 +95,8 @@ button.clicked{
 }
 
 .wrapper {  
-margin-top: 30px;
-margin-bottom: 30px;
+    margin-top: 30px;
+    margin-bottom: 30px;
 }
 
 .form-signin {
@@ -158,7 +159,9 @@ margin-bottom: 30px;
     margin: 0 auto;
     background-color: rgba(0,0,0,0.1);
 }
-
+section {
+    margin-top: 99px;
+}
 details {
     margin-top: 9px;
     width: 100%;
@@ -206,25 +209,185 @@ details[open] summary {
     }
 }
 
-.file > label {
-  font-size: 1rem;
-  font-weight: 300;
-  cursor: pointer;
-  outline: 0;
-  user-select: none;
-  border-color: rgb(216, 216, 216) rgb(209, 209, 209) rgb(186, 186, 186);
-  border-style: solid;
-  border-radius: 4px;
-  border-width: 1px;
-  background-color: hsl(0, 0%, 100%);
-  color: hsl(0, 0%, 29%);
-  padding: 10px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-width: 200px;
+.xxx > label {
+    font-size: 1rem;
+    font-weight: 300;
+    cursor: pointer;
+    outline: 0;
+    border-color: rgb(216, 216, 216) rgb(209, 209, 209) rgb(186, 186, 186);
+    border-style: solid;
+    border-radius: 4px;
+    border-width: 1px;
+    background-color: hsl(0, 0%, 100%);
+    color: hsl(0, 0%, 29%);
+    padding: 10px;
+    margin: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 200px;
 }
-.file > label > i {
-  font-size: 24px;
-  padding: 3px;
+.xxx > label > i {
+    font-size: 28px;
+    margin-right: 7px;
+}
+
+.upper-side {
+    padding: 1em;
+    color: #fff;
+    background-color: #8BC34A;
+    display: block;
+    border-radius: 8px;
+}
+.upper-side table {
+    width: 100%;
+    border: 1px;
+}
+.upper-side td {
+    border-spacing: 10px;
+}
+   
+.lower-side {
+    padding: 1em;
+    background: #fff;
+    display: block;
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+.lower-side > span {
+    padding: 50px 50px 50px 0px;
+    font-size: larger;
+}
+.lower-side > p {
+    padding-left: 1em;
+    padding-top: 1em;
+    padding-bottom: 1em;
+    background: rgb(239, 239, 239);
+    border-radius: 8px;
+}
+
+#message {
+    color: #757575;
+    letter-spacing: 1px;
+}
+
+.contBtn {
+    text-decoration: none;
+    background: #5f7547;
+    color: #fff;
+    margin: auto;
+    padding: .8em 3em;
+    -webkit-box-shadow: 0px 15px 30px rgba(50, 50, 50, 0.21);
+    -moz-box-shadow: 0px 15px 30px rgba(50, 50, 50, 0.21);
+    box-shadow: 0px 15px 30px rgba(50, 50, 50, 0.21);
+    border-radius: 8px;
+    -webkit-transition: all .4s ease;
+            -moz-transition: all .4s ease;
+            -o-transition: all .4s ease;
+            transition: all .4s ease;
+}
+
+.contBtn:hover {
+    background-color:#a1e757;
+    color:#050505;
+    -webkit-box-shadow: 0px 15px 30px rgba(50, 50, 50, 0.41);
+    -moz-box-shadow: 0px 15px 30px rgba(50, 50, 50, 0.41);
+    box-shadow: 0px 15px 30px rgba(50, 50, 50, 0.41);
+    -webkit-transition: all .4s ease;
+            -moz-transition: all .4s ease;
+            -o-transition: all .4s ease;
+            transition: all .4s ease;
+}
+/* https://fdossena.com/?p=html5cool/buttons/i.frag */
+#languageBouncyLabel {
+    display: inline-block;
+    padding: 0.4em 1.2em;
+    border-radius: 0.4em;
+    box-sizing: border-box;
+    text-decoration: none;
+    font-family: 'Roboto',sans-serif;
+    font-weight: 400;
+    color: #FFFFFF;
+    background-color:#320442;
+    box-shadow: inset 0 -0.6em 1em -0.35em rgba(83, 73, 73, 0.17),inset 0 0.6em 2em -0.3em rgba(255,255,255,0.15),inset 0 0 0em 0.05em rgba(255,255,255,0.12);
+    text-align: center;
+    position: relative;
+}
+#languageBouncyLabel:hover {
+    border-color: rgba(255,255,255,1);
+    background-color:#65257a;
+}
+#languageBouncyLabel:active {
+    box-shadow:inset 0 0.6em 2em -0.3em rgba(0,0,0,0.15),inset 0 0 0em 0.05em rgba(255,255,255,0.12);
+    background-color:#986da7;
+}
+@media all and (max-width:30em) {
+    #languageGrp > label {
+    display:block;
+    margin:0.2em auto;
+    }
+}
+.bouncy {
+    animation:bouncy 5s infinite linear;
+    position:relative;
+}
+@keyframes bouncy {
+0%{top:0em}
+40%{top:0em}
+43%{top:-0.9em}
+46%{top:0em}
+48%{top:-0.4em}
+50%{top:0em}
+100%{top:0em;}
+}
+
+.navbar {
+    position: fixed;
+    display: block;
+    z-index: 99999;
+    top: 0px;
+}
+
+.dropbtn {
+    background-color: rgb(163, 168, 179);
+    color: white;
+    padding: 0px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: none;
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+    padding: 9px;
+}
+.dropbtn > img {
+    margin: 0px 8px;
+}
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f1f1f1;
+    min-width: 150px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+}
+.dropdown:hover .dropdown-content {display: block;}
+
+.dropdown:hover .dropbtn {background-color: #4267B2;}
+
+.row-language {
+    filter: drop-shadow(0px 20px 10px rgba(0, 0, 0, 30));
+}
+.row-language:hover {
+    border: none;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+    cursor: pointer;
+}
+.flag-language {
+    height: 26px;
+    width: 26px;
 }

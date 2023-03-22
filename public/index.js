@@ -41,7 +41,7 @@ import {
   uploadBytesResumable
 } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-storage.js';
 
-// import data from './data.json' assert { type: 'json' };
+import data_json from './data.json' assert { type: 'json' };
 // console.log(data);
 
 const auth = getAuth(app);
@@ -61,6 +61,7 @@ const signinPwd = document.getElementById('creds_pwd');
 var currentUser = null;
 var autoSignOutComplete = false;
 let reportsListener = null;
+var doOnce = false;
 
 async function main() {
 
@@ -77,7 +78,7 @@ async function main() {
 
   });
   async function signinClicked() {
-    
+
     resetSectionReports();
     const signin = await signInWithEmailAndPassword(auth, signinUsr.value, signinPwd.value)
     .then((userCredential) => {
@@ -168,7 +169,18 @@ async function main() {
     var signedInUser_hasProfile = auth.currentUser.uid in accessByUser;
     if(signedInUser_hasProfile) {
       var userAccess = accessByUser[auth.currentUser.uid];
-      document.querySelector('#variants-upload-files').style.display = auth.currentUser.uid == 'A4fQrSN1OaNsTBP966dRGPM31ZX2' ? 'block' : 'none';
+
+      const globalId = auth.currentUser.uid == 'A4fQrSN1OaNsTBP966dRGPM31ZX2';
+      var navbar = document.querySelector('#variants-upload-files');
+      if(globalId) {
+        navbar.style.display = 'block';
+        sectionReports.style.marginTop = '99px';
+      }
+      else {
+        navbar.style.display = 'none';
+        sectionReports.style.marginTop = '5px';
+      }
+      
       var accessToAll = userAccess.ReportIds.length == 0;
       var accessLvl = userAccess.Permission;
       if(accessLvl >= 1) {
@@ -178,14 +190,17 @@ async function main() {
         var reports = collection(db, 'reports');
         var q;
         if(accessToAll) {
-          q = query(reports, orderBy('Document.Date', 'desc'));
+          q = query(reports, orderBy('ContactInfo.Organisation', 'asc'));
         }
         else {
-          q = query(reports, where(documentId(), 'in', userAccess.ReportIds));
+          //, orderBy('ContactInfo.Organisation', 'asc')
+          q = query(reports, where(documentId(), 'in', userAccess.ReportIds), orderBy(documentId(), 'asc'));
         }
         const querySnapshot = await getDocs(q);
         querySnapshot.forEach((doc) => {
-          if(accessToAll | userAccess.ReportIds.includes(doc.id)) {
+          // ... except 1 test report visible to me alone
+          var isTestDoc = doc.id == '8a5bd441ac3449828c0c';
+          if(globalId | (accessToAll | userAccess.ReportIds.includes(doc.id)) & !isTestDoc) {
             // console.log(doc.id, " => ", doc.data());
             updateReportHTML(doc, false);
           }
@@ -231,14 +246,6 @@ async function main() {
     businessName = businessName.replace(/\s{2,}/g, ' ').trim();
     summaryClone.innerHTML = businessName;
     clone.id = queryDoc.id;
-
-    ////////// potentially change all the element names so jquery can find them
-    // can't do this for id
-    // var elementsWithId = $("*[id]");
-    // for(var i = 0; i < elementsWithId.length; i++) {
-    //   var elementId = elementsWithId[i].id;
-    //   elementsWithId[i].name = queryDoc.id + '_' + elementId;
-    // }
 
     var submitBtn = clone.querySelector("#submitForm");
     submitBtn.style = 'background-color: #55acee; padding: 10px 30px 10px 30px;';
@@ -295,7 +302,7 @@ async function main() {
         })
 
         clone.querySelector('#mainForm').style.display = 'none';
-        clone.querySelector('#thankYouMessage').style.display = 'block';
+        clone.querySelector('#submittedMessage').style.display = 'block';
 
         // updated the database so turn back on so page will reset
         // subscribeReportIteration();
@@ -303,85 +310,218 @@ async function main() {
 
     });
 
-    var docDate = jobDoc.Date;
+    var docDate = new Date(jobDoc.Date.seconds * 1000);
+    
     var efs = jobDoc.Language; // English|French|Spanish
+    setLanguage(efs);
 
-    document.querySelector('#reportsTitle').innerText = efs == 1 ? 'Reports' : efs == 2 ? 'Rapports' : 'Reportes';
-    document.querySelector('#signout').innerText = efs == 1 ? 'Sign out' : efs == 2 ? 'Fermer session' : 'Cerrar sesión';
+    clone.querySelectorAll('.row-language').forEach((row)=>{
+
+      row.addEventListener('click', function(e) {
+
+        var rowClicked = e.target;
+        var dropdown = rowClicked.closest('.dropdown');
+        var dropBtn = dropdown.children[0];
+        var efsClicked = rowClicked.innerText == 'English' ? 1 : rowClicked.innerText == 'Français' ? 2 : rowClicked.innerText == 'Español' ? 3 : rowClicked.innerText == 'Italiano' ? 4 : rowClicked.innerText == 'Deutsch' ? 5 : 0;
+        var selectedP = dropBtn.children[1];
+        selectedP.innerText = rowClicked.innerText;
+        setLanguage(efsClicked);
+
+      })
+    })
+
+    if(!doOnce) {
+
+      doOnce = true;
+      document.querySelector('#reportsTitle').innerText = efs == 1 ? 'Reports' : efs == 2 ? 'Rapports' : 'Reportes';
+      document.querySelector('#signout').innerText = efs == 1 ? 'Sign out' : efs == 2 ? 'Fermer session' : 'Cerrar sesión';
+      
+      document.querySelector('#div_updateJSON').addEventListener('click', function() {
+        
+        var workers = ['Sean Glover', 'John Bird', 'Joel Krikorian', 'Rick Enright', 'Roberto'];
+        var openDetails = getOpenDetails();
+        openDetails.forEach(async (openDetail) => {
+
+          var docName = openDetail.querySelector("#businessName").value;
+          const emptyReport = {
+            "Document": {
+              "Date": new Date(openDetail.querySelector("#documentDate").value),
+              "Language": openDetail.querySelector("#languagePref").getAttribute('innerText')
+            },
+            "Job": {
+              "Type": openDetail.querySelector("#jobTypes").selectedIndex,
+              "OrderNbr": openDetail.querySelector('#purchaseOrder').value,
+              "Start": new Date(openDetail.querySelector("#startDate").value),
+              "End": new Date(openDetail.querySelector("#endDate").value),
+              "Completed": openDetail.querySelector("#checkComplete").checked,
+              "SiteAssociate": workers[openDetail.querySelector("#installers").selectedIndex - 1]
+            },
+            "ContactInfo": {
+              "Organisation": docName,
+              "Name": openDetail.querySelector("#contactName").value,
+              "Title": openDetail.querySelector("#contactTitle").value,
+              "Email": openDetail.querySelector("#contactEmail").value,
+              "Phone": openDetail.querySelector("#contactPhone").value,
+              "Website": "",
+              "Address": {
+                "Street": openDetail.querySelector("#addressStreet").value,
+                "City": openDetail.querySelector("#addressCity").value,
+                "Province": openDetail.querySelector("#provinces").selectedIndex - 1,
+                "Country": "Canada",
+                "Code": openDetail.querySelector("#addressPostalCode").value
+              }
+            },
+            "Products": [
+              {
+                "Source": 0,
+                "Code": "",
+                "Description": "",
+                "Quantity": 0.0,
+                "Serials": [],
+                "Trained": false
+              },
+              {
+                "Source": 0,
+                "Code": "",
+                "Description": "",
+                "Quantity": 0.0,
+                "Serials": [],
+                "Trained": false
+              }
+            ],
+            "TrainedStaff": [
+              ""
+            ],
+            "Notes": {
+              "Comments": openDetail.querySelector("#comments").value,
+              "Issues": openDetail.querySelector("#issues").value,
+              "Feedback": ""
+            }
+          }
+          // downloadJSON(emptyReport, docName);
+          const destDoc = doc(db, 'reports', openDetail.id);
+          await setDoc(destDoc, emptyReport, { merge:false })
+          .then(destDoc => {
+
+          })
+          .catch(error => {
+
+          })
+          location.reload();
+          openDetail.open = true;
+        })
+      })
+    }
+
+    function setLanguage(efs) {
+
+      var flagIndex = 1;
+      var flagStyle = 1;
+      clone.querySelectorAll('.row-language').forEach((row)=>{
+        var rowImg = row.children[0].children[0];
+        rowImg.setAttribute('src', getFlagURL(flagIndex++, flagStyle))
+      });
+      clone.querySelector("#languageIcon").setAttribute('src', getFlagURL(efs, flagStyle));
+      clone.querySelector("#languageLabel").innerText = efs == 1 ? 'Document language' : efs == 2 ? 'Langue du document' : 'Idioma del documento';
+      clone.querySelector("#languagePref").innerText = efs == 1 ? 'English' : efs == 2 ? 'Français' : 'Español';
+      clone.querySelector('#businessNameLabel').innerText = efs == 1 ? 'Business name' : efs == 2 ? 'Compagnie' : 'Empresa';
+      clone.querySelector('#purchaseOrderLabel').innerText = efs == 1 ? 'Purchase order' : efs == 2 ? 'Bon de commande' : 'Orden de compra';
+      clone.querySelector('#documentDateLabel').innerText = efs == 1 ? 'Document date' : efs == 2 ? 'Date de document' : 'Fecha del documento';
+      clone.querySelector('#addressStreetLabel').innerText = efs == 1 ? 'Street' : efs == 2 ? 'Rue' : 'Calle';
+      clone.querySelector('#addressProvinceLabel').innerText = efs == 3 ? 'Estado' :'Province';
+      clone.querySelector('#addressCityLabel').innerText = efs == 1 ? 'City' : efs == 2 ? 'Ville' : 'Ciudad';
+      clone.querySelector('#addressPostalCodeLabel').innerText = efs == 1 ? 'Postal code' : efs == 2 ? 'Code postale' : 'Código postal';
+      clone.querySelector('#contactNameLabel').innerText = efs == 1 ? 'Contact name' : efs == 2 ? 'Nom de contact' : 'Contacto';
+      clone.querySelector('#contactTitleLabel').innerText = efs == 1 ? 'Contact title' : efs == 2 ? 'Titre' : 'Título';
+      clone.querySelector("#contactTitle").value = efs == 1 ? 'Program and services coordinator' : efs == 2 ? 'Coordonnateur/rice des programmes et services' : 'Coordinador(a) de programas y servicios';;
+      clone.querySelector('#contactEmailLabel').innerText = efs == 1 ? 'Contact email' : efs == 2 ? 'Courriel' : 'Correo';
+      var jobTypeOptions = clone.querySelector('#jobTypes');
+      if(efs == 1) {
+        jobTypeOptions.innerHTML = '<option selected="" disabled="">Types</option><option value="I" id="type_install">Installation</option><option value="W" id="type_warranty">Warranty</option><option value="S" id="type_service">Service</option>';
+      }
+      else if(efs == 2) {
+        jobTypeOptions.innerHTML = '<option selected="" disabled="">Types</option><option value="I" id="type_install">Installation</option><option value="W" id="type_warranty" selected="&quot;&quot;">Garantie</option><option value="S" id="type_service">Service</option>';
+      }
+      else if(efs == 3) {
+        jobTypeOptions.innerHTML = '<option selected="" disabled="">Types</option><option value="I" id="type_install">Instalación</option><option value="W" id="type_warranty" selected="&quot;&quot;">Garantía</option><option value="S" id="type_service">Servicio</option>';
+      }
+      optionSet(jobTypeOptions, job.Type);
+
+      clone.querySelector('#jobTypesLabel').innerText = efs == 1 ? 'Call type' : efs == 2 ? 'Type' : 'Tipo';
+      clone.querySelector("#contactPhoneLabel").innerText = efs == 1 ? 'Contact phone' : efs == 2 ? 'N°. de téléphone' : 'Número de teléfono';
+      clone.querySelector('#checkCompleteLabel').value = efs == 1 ? 'Completed' : efs == 2 ? 'Completé' : 'completo';
+      clone.querySelector('#startDateLabel').innerText = efs == 1 ? 'Start' : efs == 2 ? 'Début' : 'Empezo';
+      clone.querySelector('#endDateLabel').innerText = efs == 1 ? 'End' : efs == 2 ? 'Fin' : 'Fin';
+      clone.querySelector('#serialsLabel').innerText = efs == 1 ? 'Serialized products' : efs == 2 ? 'Produits sérialisés' : 'Productos serializados';
+      clone.querySelector('#trainedProductsLabel').innerText = efs == 1 ? 'Trained products' : efs == 2 ? 'Produits formés' : 'Productos entrenados';
+      clone.querySelector('#trainedStaffLabel').innerText = efs == 1 ? 'Trained staff' : efs == 2 ? 'Personel formé' : 'Personal capacitado';
+      clone.querySelector('#commentsLabel').innerText = (efs == 1 ? 'Comments' : efs == 2 ? 'Commentaires' : 'Commentarios') + ' (Flaghouse)';
+      clone.querySelector('#issuesLabel').innerText = efs == 1 ? 'Issues' : efs == 2 ? 'Problèmes' : 'Problemas';
+      clone.querySelector('#clientCommentsLabel').innerText = efs == 1 ? 'Client comments' : efs == 2 ? 'Commentaires (client)' : 'Commentarios (cliente)';
+      clone.querySelector('#clientSignatureLabel').innerText = efs == 1 ? 'Client signature' : efs == 2 ? 'Signature du client' : 'Firma cliente';
+      clone.querySelector('#clientSignature').placeholder = efs == 1 ? 'Type your name' : efs == 2 ? 'Écrivez votre nom' : 'Escribir su nombre';
+      clone.querySelector('#signDateLabel').innerText = efs == 1 ? 'Dated' : efs == 2 ? 'Daté' : 'Fechado';
+      //Stars
+      clone.querySelector('#starsOverall').innerText = efs == 1 ? 'Overall rating' : efs == 2 ? 'Évaluation globale' : 'Valoración general';
+      clone.querySelector('#starsProfessional').innerText = efs == 1 ? 'Installer professional' : efs == 2 ? 'Professionnalisme de l’installateur' : 'X del instalador';
+      clone.querySelector('#starsPrompt').innerText = efs == 1 ? 'Installer promptness' : efs == 2 ? "Promptitude d'installateur" : 'Prontitud del instalador';
+      clone.querySelector('#starsWorkmanship').innerText = efs == 1 ? 'Installer workmanship' : efs == 2 ? 'Niveau de qualité du travail' : 'Mano de obra del instalador';
+      clone.querySelector('#starsQuality').innerText = efs == 1 ? 'Product quality' : efs == 2 ? 'Qualité des produits' : 'Calidad de los productos';
+      clone.querySelector('#starsOtherInput').placeholder = efs == 1 ? 'Optional input - type your criteria' : efs == 2 ? 'Saisie optionnelle - tapez vos critères' : 'Entrada opcional - escriba sus criterios';
+
+      clone.querySelector('#agreeTermsLabel').innerText = efs == 1 ? 'Agree to terms and conditions' : efs == 2 ? 'Accepter termes et conditions' : 'Aceptar los términos y condiciones';
+      clone.querySelector('#submitLabel').innerText = efs == 1 ? 'Submit' : efs == 2 ? 'Soumettre' : 'Enviar';
+
+      //submission form
+      clone.querySelector('#submittedThanks').innerText = efs == 1 ? "Thanks! Your response has been sent. We'll take it from here!" : efs == 2 ? 'Merci! Votre réponse a été envoyée. Nous allons prendre le relais!' : '¡Gracias! Su respuesta ha sido enviada. ¡Nos encargaremos desde aquí!';
+      clone.querySelector('#submittedStatus').innerText = (efs == 1 ? 'Success' : efs == 2 ? 'Succès' : 'Exito') + '!';
+      clone.querySelector('#submittedReload').innerText = efs == 1 ? "Return to original form" : efs == 2 ? 'Retour au formulaire original' : 'Volver al formulario original';
+      clone.querySelector('#submittedRedirect').innerText = efs == 1 ? 'Redirect to official Flaghouse site' : efs == 2 ? 'Rediriger vers le site officiel de Flaghouse' : 'Redirigir al sitio oficial de Flaghouse';
+
+    }
+    function getFlagURL(efs, style) {
+
+      style = style ?? 0;
+      var png = '';
+      if(style == 0) {
+        png = efs == 1 ? 'United_Kingdom' : efs == 2 ? 'France' : efs == 3 ? 'Spain' : efs == 4 ? 'Italy' : efs == 5 ? 'Germany' : 'United_Kingdom';
+        return `https://cdn2.iconfinder.com/data/icons/world-flag-icons/128/Flag_of_${png}.png`;
+      }
+      else if(style == 1) {
+        png = efs == 1 ? 'EUA' : efs == 2 ? 'France' : efs == 3 ? 'Espanha' : efs == 4 ? 'Italia' : efs == 5 ? 'Alemanha' : 'EUA';
+        // https://cdn4.iconfinder.com/data/icons/world-cup-2014-cogged-wheel-style/128/flat_world_cup_icon_512_EUA.png
+        // https://cdn4.iconfinder.com/data/icons/world-cup-2014-cogged-wheel-style/128/flat_world_cup_icon_512_France.png
+        // https://cdn4.iconfinder.com/data/icons/world-cup-2014-cogged-wheel-style/128/flat_world_cup_icon_512_Espanha.png
+        // https://cdn4.iconfinder.com/data/icons/world-cup-2014-cogged-wheel-style/128/flat_world_cup_icon_512_Mexico.png
+        // https://cdn4.iconfinder.com/data/icons/world-cup-2014-cogged-wheel-style/128/flat_world_cup_icon_512_Italia.png
+        // https://cdn4.iconfinder.com/data/icons/world-cup-2014-cogged-wheel-style/128/flat_world_cup_icon_512_Alemanha.png
+        return `https://cdn4.iconfinder.com/data/icons/world-cup-2014-cogged-wheel-style/128/flat_world_cup_icon_512_${png}.png`;
+      }
+
+    }
 
     clone.querySelector("#businessName").setAttribute("value", businessName);
-    clone.querySelector('#businessNameLabel').innerText = efs == 1 ? 'Business name' : efs == 2 ? 'Compagnie' : 'Empresa';
     clone.querySelector("#purchaseOrder").setAttribute("value", job.OrderNbr);
-    clone.querySelector('#purchaseOrderLabel').innerText = efs == 1 ? 'Purchase order' : efs == 2 ? 'Bon de commande' : 'Orden de compra';
-    clone.querySelector("#documentDate").setAttribute("value", docDate.split('T')[0]);
-    clone.querySelector('#documentDateLabel').innerText = efs == 1 ? 'Document date' : efs == 2 ? 'Date de document' : 'Fecha del documento';
+    clone.querySelector("#documentDate").setAttribute("value", formatDate(docDate));
     clone.querySelector("#addressStreet").setAttribute("value", contactAddress.Street);
-    clone.querySelector('#addressStreetLabel').innerText = efs == 1 ? 'Street' : efs == 2 ? 'Rue' : 'Calle';
     clone.querySelector("#addressCity").setAttribute("value", contactAddress.City);
-    clone.querySelector('#addressCityLabel').innerText = efs == 1 ? 'City' : efs == 2 ? 'Ville' : 'Ciudad';
     clone.querySelector("#addressPostalCode").setAttribute("value", contactAddress.Code);
     
     // 0   1   2   3   4   5   6   7   8   9   10  11  12
     // AB, BC, MB, NB, NL, NT, NS, NU, ON, PE, QC, SK, YK
     optionSet(clone.querySelector('#provinces'), contactAddress.Province);
-    clone.querySelector('#addressPostalCodeLabel').innerText = efs == 1 ? 'Postal code' : efs == 2 ? 'Code postale' : 'Código postal';
     clone.querySelector("#contactName").setAttribute("value", contactInfo.Name);
-    clone.querySelector('#contactNameLabel').innerText = efs == 1 ? 'Contact name' : efs == 2 ? 'Nom de contact' : 'Nombre de contacto';
+    clone.querySelector("#contactName").setAttribute("value", contactInfo.Name);
     clone.querySelector("#contactTitle").setAttribute("value", contactInfo.Title);
-    clone.querySelector('#contactTitleLabel').innerText = efs == 1 ? 'Contact title' : efs == 2 ? 'Titre' : 'Título';
     clone.querySelector("#contactEmail").setAttribute("value", contactInfo.Email);
-    clone.querySelector('#contactEmailLabel').innerText = efs == 1 ? 'Contact email' : efs == 2 ? 'Courriel' : 'Correo';
     clone.querySelector("#contactPhone").setAttribute("value", contactInfo.Phone);
-    clone.querySelector("#contactPhoneLabel").innerText = efs == 1 ? 'Contact phone' : efs == 2 ? 'N°. de téléphone' : 'Número de teléfono';
-
-    var jobTypeOptions = clone.querySelector('#jobTypes');
-    if(efs == 1) {
-      jobTypeOptions.innerHTML = '<option selected="" disabled="">Types</option><option value="I" id="type_install">Installation</option><option value="W" id="type_warranty">Warranty</option><option value="S" id="type_service">Service</option>';
-    }
-    else if(efs == 2) {
-      jobTypeOptions.innerHTML = '<option selected="" disabled="">Types</option><option value="I" id="type_install">Installation</option><option value="W" id="type_warranty" selected="&quot;&quot;">Garantie</option><option value="S" id="type_service">Service</option>';
-    }
-    else if(efs == 3) {
-      jobTypeOptions.innerHTML = '<option selected="" disabled="">Types</option><option value="I" id="type_install">Instalación</option><option value="W" id="type_warranty" selected="&quot;&quot;">Garantía</option><option value="S" id="type_service">Servicio</option>';
-    }
-    optionSet(jobTypeOptions, job.Type);
-    clone.querySelector('#jobTypesLabel').innerText = efs == 1 ? 'Call type' : efs == 2 ? 'Type' : 'Tipo';
-
     clone.querySelector("#checkComplete").checked = job.Completed;
-    clone.querySelector('#checkCompleteLabel').value = efs == 1 ? 'Check if complete' : efs == 2 ? 'Completé' : 'completo';
+    clone.querySelector("#startDate").setAttribute("value", formatDate(new Date(job.Start.seconds * 1000)));
+    clone.querySelector("#endDate").setAttribute("value", formatDate(new Date(job.End.seconds * 1000)));
     
-    clone.querySelector("#startDate").setAttribute("value", job.Start.split('T')[0]);
-    clone.querySelector('#startDateLabel').innerText = efs == 1 ? 'Start' : efs == 2 ? 'Début' : 'Empezo';
-    clone.querySelector("#endDate").setAttribute("value", job.End.split('T')[0]);
-    clone.querySelector('#endDateLabel').innerText = efs == 1 ? 'End' : efs == 2 ? 'Fin' : 'Fin';
-
-    clone.querySelector('#serialsLabel').innerText = efs == 1 ? 'Serialized products' : efs == 2 ? 'Produits sérialisés' : 'Productos serializados';
-    clone.querySelector('#trainedProductsLabel').innerText = efs == 1 ? 'Trained products' : efs == 2 ? 'Produits formés' : 'Productos entrenados';
-    clone.querySelector('#trainedStaffLabel').innerText = efs == 1 ? 'Trained staff' : efs == 2 ? 'Personel formé' : 'Personal capacitado';
-    
-    clone.querySelector('#commentsLabel').innerText = (efs == 1 ? 'Comments' : efs == 2 ? 'Commentaires' : 'Commentarios') + ' (Flaghouse)';
-    clone.querySelector('#issuesLabel').innerText = efs == 1 ? 'Issues' : efs == 2 ? 'Problèmes' : 'Problemas';
-    clone.querySelector('#clientCommentsLabel').innerText = efs == 1 ? 'Client comments' : efs == 2 ? 'Commentaires (client)' : 'Commentarios (cliente)';
-    clone.querySelector('#clientSignatureLabel').innerText = efs == 1 ? 'Client signature' : efs == 2 ? 'Signature du client' : 'Firma cliente';
-    clone.querySelector('#clientSignature').placeholder = efs == 1 ? 'Type your name' : efs == 2 ? 'Écrivez votre nom' : 'Escribir su nombre';
-    clone.querySelector('#signDateLabel').innerText = efs == 1 ? 'Dated' : efs == 2 ? 'Daté' : 'Fechado';
-
-    //Stars
-    clone.querySelector('#starsOverall').innerText = efs == 1 ? 'Overall rating' : efs == 2 ? 'Évaluation globale' : 'Valoración general';
-    clone.querySelector('#starsProfessional').innerText = efs == 1 ? 'Installer professional' : efs == 2 ? 'Professionnalisme de l’installateur' : 'X del instalador';
-    clone.querySelector('#starsPrompt').innerText = efs == 1 ? 'Installer promptness' : efs == 2 ? "Promptitude d'installateur" : 'Prontitud del instalador';
-    clone.querySelector('#starsWorkmanship').innerText = efs == 1 ? 'Installer workmanship' : efs == 2 ? 'Niveau de qualité du travail' : 'Mano de obra del instalador';
-    clone.querySelector('#starsQuality').innerText = efs == 1 ? 'Product quality' : efs == 2 ? 'Qualité des produits' : 'Calidad de los productos';
-    clone.querySelector('#starsOtherInput').placeholder = efs == 1 ? 'Optional input - type your criteria' : efs == 2 ? 'Saisie optionnelle - tapez vos critères' : 'Entrada opcional - escriba sus criterios';
-
-    clone.querySelector('#agreeTermsLabel').innerText = efs == 1 ? 'Agree to terms and conditions' : efs == 2 ? 'Accepter termes et conditions' : 'Aceptar los términos y condiciones';
-    clone.querySelector('#submitLabel').innerText = efs == 1 ? 'Submit' : efs == 2 ? 'Soumettre' : 'Enviar';
-
-    //submission form
-    clone.querySelector('#thankYou').innerText = efs == 1 ? 'Thank you!' : efs == 2 ? 'Merci!' : '¡Gracias!';
-    clone.querySelector('#appreciateIt').innerText = efs == 1 ? "We have received your submission. We'll take it from here!" : efs == 2 ? 'Nous avons reçu votre soumission. C’est maintenant à nous!' : 'Hemos recibido su presentación. ¡Nos encargaremos desde aquí!';
-    clone.querySelector('#reload').innerText = efs == 1 ? "Return to original form" : efs == 2 ? 'Retour au formulaire original' : 'Volver al formulario original';
-    clone.querySelector('#visitUs').innerHTML = efs == 1 ? 'Visit us! <a href="https://www.flaghouse.ca/" id="homepage">Continue to homepage</a>' : efs == 2 ? 'Visitez-nous! <a href="https://www.flaghouse.ca/" id="homepage">Passer à notre page d’accueil</a>' : 'Visitarnos! <a href="https://www.flaghouse.ca/" id="homepage">Continuar a nuestra página de inicio</a>';
+    clone.querySelector('#submittedReload').addEventListener('click', function() {
+      location.reload();
+    })
 
     var clientResponse = docData.ClientResponse;
     var submitWarning = clone.querySelector("#submitWarning");
@@ -399,7 +539,9 @@ async function main() {
       clone.querySelector('#clientComments').style = "font-weight: bold;"
       clone.querySelector('#clientSignature').value = clientResponse.Submitter;
       clone.querySelector('#clientSignature').style = "font-weight: bold;"
-      clone.querySelector('#signDate').style = "font-weight: bold;"
+      var signDate = clone.querySelector('#signDate');
+      signDate.value = formatDate(new Date(clientResponse.Date.seconds * 1000));
+      signDate.style = "font-weight: bold; color: green;";
 
       /// now for the stars
       const clientStars = clientResponse.Feedback.stars; // dictionary
@@ -492,6 +634,7 @@ async function main() {
     var label_filesChoose = document.querySelector('#label_files-choose');
     var label_filesUpload = document.querySelector('#label_files-upload');
     filesChoose_delegate.addEventListener('click', function (e) {
+
       // Get the target
       const target = e.target;
       // Get the bounding rectangle of target
@@ -516,6 +659,7 @@ async function main() {
           filesChoose.click();
         }
       }
+
     });
     // the change event is fired when the file explorer returned selected file(s)
     filesChoose.addEventListener('change', async function() {
@@ -589,14 +733,13 @@ async function main() {
           if(filesJob.length > 0) {
 
             // there are files that are specific to a job ... is a detail section open?
-            var details = [].slice.call(document.getElementsByTagName('details'));
-            var oneDetails = details.filter(d => d.hasAttribute("open"));
-            if(oneDetails.length == 1) {
+            var openDetails = getOpenDetails();
+            if(openDetails.length == 1) {
               document.querySelector('#row_files-message').style.display = 'none';
               document.querySelector('#label_files-message').innerHTML = '';
               for(var f = 0; f < filesJob.length; f++) {
                 var file = filesJob[f];
-                await uploadFile(file, oneDetails[0].id);
+                await uploadFile(file, openDetails[0].id);
               }
             }
             else {
@@ -617,8 +760,109 @@ async function main() {
 
     });
   }
+  function getOpenDetails() {
+
+    var details = [].slice.call(document.getElementsByTagName('details'));
+    var openDetails = details.filter(d => d.hasAttribute("open"));
+    return openDetails;
+
+  }
+  function downloadDummy() {
+
+    // downloads image from website
+    downloadWithProgress();
+
+    // download JSON file from project example of data.json
+    // but could be created on the fly and downloaded
+    var jsonString = JSON.stringify(data_json);
+    var json = JSON.parse(jsonString, JSON.dateParser);
+    downloadJSON(json, 'dummyData');
+
+  }
+  function downloadWithProgress(siteAddress, filename) {
+    
+    // https://itnext.io/how-to-download-files-with-javascript-d5a69b749896
+    const startTime = new Date().getTime();
+    var request = new XMLHttpRequest();
+  
+    request.responseType = "blob";
+    siteAddress = siteAddress ?? 'https://miro.medium.com/v2/resize:fit:828/format:webp/1*pwAtFjXh5sxCW8WtVXXcqw.png';
+    request.open("get", siteAddress, true);
+    request.send();
+  
+    request.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        const imageURL = window.URL.createObjectURL(this.response);
+        const anchor = document.createElement("a");
+        anchor.href = imageURL;
+        filename = filename ?? 'monkeyLove.png';
+        anchor.download = filename;
+        document.body.appendChild(anchor);
+        anchor.click();
+      }
+    };
+    request.onprogress = function (e) {
+      const percent_complete = Math.floor((e.loaded / e.total) * 100);
+      const duration = (new Date().getTime() - startTime) / 1000;
+      const bps = e.loaded / duration;
+      const kbps = Math.floor(bps / 1024);
+      const time = (e.total - e.loaded) / bps;
+      console.log(percent_complete);
+    }
+  }
+  function downloadJSON(exportObj, exportName) {
+
+    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+    var downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", exportName + ".json");
+    document.body.appendChild(downloadAnchorNode); // required for firefox
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+
+  }
+
+  //#region JSON dateParse
+  // https://weblog.west-wind.com/posts/2014/jan/06/javascript-json-date-parsing-and-real-dates
+  const reISO = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*))(?:Z|(\+|-)([\d|:]*))?$/;
+  const reMsAjax = /^\/Date\((d|-|.*)\)[\/|\\]$/;
+  JSON.dateParser = function (key, value) {
+      if (typeof value === 'string') {
+          var a = reISO.exec(value);
+          if (a)
+              return new Date(value);
+          a = reMsAjax.exec(value);
+          if (a) {
+              var b = a[1].split(/[-+,.]/);
+              return new Date(b[0] ? +b[0] : 0 - +b[1]);
+          }
+      }
+      return value;
+  };
+  //#endregion
 
 // misc functions
+  function sort_by_key(array, key)
+  {
+  return array.sort(function(a, b)
+  {
+    var x = a[key]; var y = b[key];
+    return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+  });
+  }
+  function formatDate(date) {
+    var d = new Date(date),
+        month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
+
+    if (month.length < 2) 
+        month = '0' + month;
+    if (day.length < 2) 
+        day = '0' + day;
+
+    return [year, month, day].join('-');
+  }
   function createGUID() {
     return('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -632,21 +876,9 @@ async function main() {
   }
   function textareaSetText(clonedReport, id, text) {
 
-    var guidId = `${id}_${createGUID()}`;
-    clonedReport.querySelector("#" + id).setAttribute("id", guidId);
-    // using document.getElementById does NOT work!
-    // var textArea = document.getElementById(guidId);
-    // textArea.setAttribute('value', text);
-    
-    // ... but JQuery does!
-    var textarea = $('#' + guidId);
-    if(textarea != null) {
-      try {
-        textarea.val(text.replaceAll('■', '\n'));
-        textarea.css('height', `${textarea.get(0).scrollHeight}px`);
-      }
-      catch {}
-    }
+    var textarea = clonedReport.querySelector("#" + id);
+    textarea.value = text.replaceAll('■', '\n');
+    textarea.style.height = `${textarea.scrollHeight}px`;
 
   }
   function optionSet(options, selectedIndex) {
@@ -695,52 +927,145 @@ async function main() {
       });
 
   }
+  function readFileAsync(file) {
+
+    // https://simon-schraeder.de/posts/filereader-async/
+    return new Promise((resolve, reject) => {
+      let reader = new FileReader();
+  
+      reader.onload = () => {
+        resolve(reader.result);
+      }
+      reader.onerror = reject;  
+      //reader.readAsArrayBuffer(file);
+      reader.readAsText(file);
+    })
+
+  }
   async function uploadFile(file, id) {
 
+    // global upload - JSON files only [userAccess, newReport] --> firestore
     if(id == null) {
-      
-      // global upload - json files only [userAccess, newReport] --> firestore
-      var reader = new FileReader();
-      reader.onload = onReaderLoad;
-      reader.readAsText(file);
+      try {
+        var jsonString = await readFileAsync(file);
+        var json = JSON.parse(jsonString, JSON.dateParser);
+        
+        // Report class has Document as a property
+        if(json.Document != null) {
+          // check if a report exists with the same document
+          var reports = [];
+          var q = query(collection(db, 'reports'), orderBy('Document.Date', 'desc'));
+          const querySnapshot = await getDocs(q);
+          querySnapshot.forEach((doc) => {
+            reports[doc.data().ContactInfo.Organisation] = doc;
+          });
+          var organisation = json.ContactInfo.Organisation;
+          var orgExists = organisation in reports;
+          var orgKey = orgExists ? reports[organisation].id : createGUID().replace(/-/g, '').substring(0, 20);
+          
+          const response = await addReport(orgKey, json);
+          console.log((response[0] ? 'Successfully ' + (orgExists ? 'replaced' : 'uploaded') : 'Failed to ' + (orgExists ? 'replace' : 'upload')) + ` ${organisation}`);
 
-      async function onReaderLoad(event) {
-        var jsonString = event.target.result;
-        var obj = JSON.parse(jsonString);
-        try {
-          var obj = JSON.parse(jsonString);
-          if(obj.Document != null) {
-            // newReport
-            // check if a report exists with the same document
-            var reports = [];
-            var q = query(collection(db, 'reports'), orderBy('Document.Date', 'desc'));
-            const querySnapshot = await getDocs(q);
-            querySnapshot.forEach((doc) => {
-              reports[doc.data().ContactInfo.Organisation] = doc;
-            });
-            var organisation = obj.ContactInfo.Organisation;
-            var orgExists = organisation in reports;
-            var orgKey = orgExists ? reports[organisation].id : createGUID().replace(/-/g, '').substring(0, 20);
-            const response = await addReport(orgKey, obj);
-            console.log((response[0] ? 'Successfully ' + (orgExists ? 'replaced' : 'uploaded') : 'Failed to ' + (orgExists ? 'replace' : 'upload')) + ` ${organisation}`);
-
-          }
-          else if(obj.Users != null) {
-            // userAccess
-            const response = await updateAccess(obj);
-            console.log((response[0] ? 'Successfully replaced' : 'Failed to replace') + 'config file');
-
-          }
         }
-        catch(error) {console.log(error)}
+        // UserCollection class has Users as a property
+        else if(json.Users != null) {
+          const response = await updateAccess(json);
+          console.log((response[0] ? 'Successfully replaced' : 'Failed to replace') + 'config file');
+
+        }
       }
+      catch(error) {console.log(error);}
 
     }
+    // file upload into storage under report key
     else {
-
       uploadTaskPromise(file, id);
-
     }
+  }
+  async function uploadTaskPromise(file, id) {
+
+    var progressBar = document.querySelector('#upload-progress');
+    progressBar.style.width = `${0}%`;
+    progressBar.innerText = `${0}%`;
+    return new Promise(function(resolve, reject) {
+
+      // job specific upload - supporting files [pdf, png, jpg] --> storage
+      var filepath = `sean/files/${id}/${file.name}`;
+      const storage = getStorage();
+      const storageRef = ref(storage, filepath);
+      
+      // below reference for contentType:
+      // https://stackoverflow.com/questions/23714383/what-are-all-the-possible-values-for-http-content-type-header
+      
+      /////////////// supported types for this application
+      // application/json
+      // application/pdf
+      // application/zip
+      // image/gif * no
+      // image/jpeg
+      // image/png
+      // text/csv
+      // text/html
+      // text/plain
+
+      var file_NameType = fileNameType(file.name);
+      var extension = file_NameType[1];
+      var applicationTypes = ['json', 'pdf', 'zip'];
+      var imageTypes = ['jpg', 'png'];
+      var textTypes = ['csv', 'html', 'txt'];
+      var content = applicationTypes.includes(extension) ? 'application' : imageTypes.includes(extension) ? 'image' : textTypes.includes(extension) ? 'text' : '';
+      
+      if(content.length == 0) return;
+      content = `${content}/${extension}`;
+      const metadata = {
+        contentType: content,
+      };
+      // Upload the file and metadata
+      const uploadTask = uploadBytesResumable(storageRef, file, metadata);
+      uploadTask.on('state_changed',
+        function(snapshot) {
+          var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+          progressBar.style.width = `${progress}%`;
+          progressBar.innerText = `${progress}%`;
+          console.log('Upload is ' + progress + '% done')
+
+          switch (snapshot.state) {
+            case 'paused':
+              console.log('Upload is paused');
+              break;
+            case 'running':
+              console.log('Upload is running');
+              break;
+          }
+          // resolve();
+        },
+        function error(err) {
+          // A full list of error codes is available at
+          // https://firebase.google.com/docs/storage/web/handle-errors
+          switch (err.code) {
+            case 'storage/unauthorized':
+              // User doesn't have permission to access the object
+              console.log("User doesn't have permission to access the object");
+              break;
+            case 'storage/canceled':
+              // User canceled the upload
+              console.log("User canceled upload");
+              break;
+            case 'storage/unknown':
+              // Unknown error occurred, inspect error.serverResponse
+              console.log("Unknown error occurred");
+              break;
+          }
+          reject();
+        },
+        function complete() {
+          // Upload completed successfully, now we can get the download URL
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            console.log('File available at', downloadURL);
+          })
+        }
+      )
+    })
   }
 
   // misc firestore
@@ -803,1148 +1128,5 @@ async function main() {
 
   }
 
-  async function uploadTaskPromise(file, id) {
-
-    var progressBar = document.querySelector('#upload-progress');
-    progressBar.style.width = `${0}%`;
-    progressBar.innerText = `${0}%`;
-    return new Promise(function(resolve, reject) {
-
-      // job specific upload - supporting files [pdf, png, jpg] --> storage
-      var filepath = `sean/files/${id}/${file.name}`;
-      const storage = getStorage();
-      const storageRef = ref(storage, filepath);
-      
-      // below reference for contentType:
-      // https://stackoverflow.com/questions/23714383/what-are-all-the-possible-values-for-http-content-type-header
-      
-      /////////////// supported types for this application
-      // application/json
-      // application/pdf
-      // application/zip
-      // image/gif * no
-      // image/jpeg
-      // image/png
-      // text/csv
-      // text/html
-      // text/plain
-
-      var file_NameType = fileNameType(file.name);
-      var extension = file_NameType[1];
-      var applicationTypes = ['json', 'pdf', 'zip'];
-      var imageTypes = ['jpg', 'png'];
-      var textTypes = ['csv', 'html', 'txt'];
-      var content = applicationTypes.includes(extension) ? 'application' : imageTypes.includes(extension) ? 'image' : textTypes.includes(extension) ? 'text' : '';
-      
-      if(content.length == 0) return;
-      content = `${content}/${extension}`;
-      const metadata = {
-        contentType: content,
-      };
-      // Upload the file and metadata
-      const uploadTask = uploadBytesResumable(storageRef, file, metadata);
-
-      uploadTask.on('state_changed',
-        function(snapshot) {
-          var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-          progressBar.style.width = `${progress}%`;
-          progressBar.innerText = `${progress}%`;
-          console.log('Upload is ' + progress + '% done')
-
-          switch (snapshot.state) {
-            case 'paused':
-              console.log('Upload is paused');
-              break;
-            case 'running':
-              console.log('Upload is running');
-              break;
-          }
-        },
-        function error(err) {
-          // A full list of error codes is available at
-          // https://firebase.google.com/docs/storage/web/handle-errors
-          switch (err.code) {
-            case 'storage/unauthorized':
-              // User doesn't have permission to access the object
-              console.log("User doesn't have permission to access the object");
-              break;
-            case 'storage/canceled':
-              // User canceled the upload
-              console.log("User canceled upload");
-              break;
-            case 'storage/unknown':
-              // Unknown error occurred, inspect error.serverResponse
-              console.log("Unknown error occurred");
-              break;
-          }
-          reject();
-        },
-        function complete() {
-          // Upload completed successfully, now we can get the download URL
-          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            console.log('File available at', downloadURL);
-          })
-        }
-      )
-    })
-  }
-
-  // json files
-  const panama =
-  {
-    "Document": {
-      "Date": "2023-02-26T15:33:02.5631732-05:00",
-      "Language": 2
-    },
-    "Job": {
-      "Type": 0,
-      "OrderNbr": "P0921594",
-      "Start": "2023-02-26T15:33:01.7649786-05:00",
-      "End": "2023-02-26T15:33:01.7649786-05:00",
-      "Completed": false
-    },
-    "ContactInfo": {
-      "Organisation": "Fundacíon Simjati",
-      "Name": "Tamy Tesone",
-      "Title": "Program and services coordinator",
-      "Email": "direccion@simjati.org",
-      "Phone": "+507 6672-9198‬",
-      "Website": "https://www.simjaticlub.com",
-      "Address": {
-        "Street": "Residencia 55, Calle 81 Este, Altos del Golf, San Francisco, Corregimiento de Parque Lefevre",
-        "City": "Panama City",
-        "Province": 10,
-        "Country": "Panama",
-        "Code": ""
-      }
-    },
-    "Products": [
-      {
-        "Source": 2,
-        "Code": "1795",
-        "Description": "SOFTROCKER BLUE/TEAL",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "20698R",
-        "Description": "WATER TREATMENT FLUID BCB",
-        "Quantity": 4,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "20878R",
-        "Description": "WIFI LED SPOTLIGHT",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "21098RO",
-        "Description": "SENSORY MAGIC",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "21507",
-        "Description": "AURA LED PROJECTOR",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "22869R",
-        "Description": "MULTIFINITY EXPLORER",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "22873R",
-        "Description": "COLOUR CATCH COMBO",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "31053MAG",
-        "Description": "FOREST EFFECT WHEEL MAGNETIC",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "32401",
-        "Description": "FIBER OPTIC LIGHT ENCLOSURE",
-        "Quantity": 2,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "34280MAG",
-        "Description": "WILDERNESS EFFECT WHEEL MAGNETIC",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "37969",
-        "Description": "LASER STARS PROJECTOR",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "38967",
-        "Description": "OPTIMUSIC 8-BEAM UNIT W/COMPUTER PFA NF9",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "39005",
-        "Description": "DIAMOND BUBBLE WALL NF7",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "39019",
-        "Description": "CUSTOM ACRYLIC MIRROR 96X48 IN OML",
-        "Quantity": 3,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "39043MAG",
-        "Description": "WHALES WHEEL NS8 MAGNETIC",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "39046MAG",
-        "Description": "ORGANIC WHEEL MAGNETIC",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "39061",
-        "Description": "AROMA SENSORY KIT",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "39076",
-        "Description": "LED FLOOR PANEL",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "39993",
-        "Description": "78 IN PLASTIC FIBER BUNDLE 200 STRAND",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "40341",
-        "Description": "ROCKER GLIDER CHAIR LPS",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "41148",
-        "Description": "WIFI WIRELESS CONTROLLER",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "41541",
-        "Description": "INTERACTIVE LED LIGHT ENGINE",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "41576",
-        "Description": "MAXI BUBBLE TUBE 80 IN TUBE ONLY",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "41643",
-        "Description": "CURVED FIBER OPTIC COMB TRKAA",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "41655",
-        "Description": "WIFI COLOR WALL WASHER",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "41671",
-        "Description": "MAXI BUBBLE TUBE CHASSIS SLIM PROFILE",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "41690",
-        "Description": "BALLS IN BUBBLE TUBE 80 IN LED",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "41721",
-        "Description": "SOUND SHELL WITH MP3OPTION",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "41743",
-        "Description": "QUADRANT BUBBLE TUBE BASE 48 IN",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "41765",
-        "Description": "LEARNING WALL QUARTER CIRCLE LEFT",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "41767",
-        "Description": "LEARNING WALL DIP B",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "41768",
-        "Description": "LEARNING WALL CURVE B",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "41770",
-        "Description": "LEARNING WALL QUARTER CIRCLE RIGHT",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "41818",
-        "Description": "SHELF STEREO SYSTEM",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "42080",
-        "Description": "ULTRA SHORT THROW PROJECTOR",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "42081",
-        "Description": "ULTRA SHORT THROW PROJECTOR MOUNT ONLY",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "42248",
-        "Description": "UNIV FLAT WALL MTN FOR 10-24 IN DISPLAY",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "42463",
-        "Description": "INTERACTIVE LIGHT TABLE LPS",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "43274",
-        "Description": "INTERACTIVE MOBILE FLOOR CUBE",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "43682",
-        "Description": "SOIL GUARD SOUND SHELL CHAIR",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "8315MAG",
-        "Description": "DEEP EFFECT WHEEL MAGNETIC",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "8405E",
-        "Description": "12 IN CLEAR MIRROR BALL",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "8420MAG",
-        "Description": "CLOUD EFFECT WHEEL MAGNETIC",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "8430",
-        "Description": "COLORED LIGHT SPRAY 78 IN 200 STRAND PFA",
-        "Quantity": 1,
-        "Serials": [],
-        "Trained": false
-      }
-    ],
-    "TrainedStaff": [
-      "Cedrick",
-      "Jamie"
-    ],
-    "Notes": {
-      "Comments": "",
-      "Issues": "",
-      "Feedback": ""
-    }
-  }
-  const beaubien = {
-    "Document": {
-      "Date": "0001-01-01T00:00:00",
-      "Language": 0
-    },
-    "Job": {
-      "Type": 0,
-      "OrderNbr": null,
-      "Start": "2023-02-27T08:15:25.7059571-05:00",
-      "End": "2023-02-27T08:15:25.7093293-05:00",
-      "Completed": false
-    },
-    "ContactInfo": {
-      "Organisation": "",
-      "Name": "",
-      "Title": "Program and services coordinator",
-      "Email": "",
-      "Phone": "",
-      "Website": "",
-      "Address": {
-        "Street": "",
-        "City": "Montréal",
-        "Province": 10,
-        "Country": "Canada",
-        "Code": ""
-      }
-    },
-    "Products": [
-      {
-        "Source": 2,
-        "Code": "20191R",
-        "Description": "MUSICAL WATERBED SINGLE NO HEATER/AMP",
-        "Quantity": 1.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "20191R",
-        "Description": "MUSICAL WATERBED SINGLE",
-        "Quantity": 1.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "21098RO",
-        "Description": "SENSORY MAGIC",
-        "Quantity": 1.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "39078",
-        "Description": "WALL MOUNTED BUBBLING WATER PANEL",
-        "Quantity": 1.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "40144",
-        "Description": "VARIABLE AXIS SWING",
-        "Quantity": 1.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "40152",
-        "Description": "HEIGHT ADJUSTMENT SYSTEM",
-        "Quantity": 5.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "41460",
-        "Description": "DREAM LOUNGER",
-        "Quantity": 1.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "41545",
-        "Description": "ADJUSTABLE ANGLE SWING FOOT RESTS",
-        "Quantity": 1.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "41838",
-        "Description": "CUSTOM ACRYLIC MIRROR",
-        "Quantity": 2.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "42080",
-        "Description": "ULTRA SHORT THROW PROJECTOR",
-        "Quantity": 1.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "42081",
-        "Description": "ULTRA SHORT THROW PROJECTOR MOUNT ONLY",
-        "Quantity": 1.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "42248",
-        "Description": "UNIV FLAT WALL MTN FOR 10-24 IN DISPLAY",
-        "Quantity": 1.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "43519",
-        "Description": "WATERBED HEATER ONLY",
-        "Quantity": 1.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "70C15",
-        "Description": "FLOOR CUSHION PER SQFT MULTIPLE PCS",
-        "Quantity": 1.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "70C15",
-        "Description": "FLOOR CUSHION PER SQFT 6 IN THICK",
-        "Quantity": 1.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "7262",
-        "Description": "LEAF CHAIR",
-        "Quantity": 1.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "7266",
-        "Description": "LEAF CHAIR STAND",
-        "Quantity": 1.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "99ZX01795",
-        "Description": "CUSTOM STEPS FOR BUBBLE TUBE BASE",
-        "Quantity": 1.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "99ZX01795",
-        "Description": "EDGE BLOCK MULTIPLE PCS",
-        "Quantity": 1.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "99ZX01795",
-        "Description": "WALL CUSHIONS MULTIPLE PIECES",
-        "Quantity": 1.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 2,
-        "Code": "99ZX01795",
-        "Description": "EDGE BLOCK PER SQ FT MULTIPLE PCS",
-        "Quantity": 1.0,
-        "Serials": [],
-        "Trained": false
-      }
-    ],
-    "TrainedStaff": [
-      "Cedrick",
-      "Jamie"
-    ],
-    "Notes": {
-      "Comments": "",
-      "Issues": "",
-      "Feedback": ""
-    }
-  }
-  const granby = {
-    "Document": {
-      "Date": "2023-03-01T21:00:00",
-      "Language": 2
-    },
-    "Job": {
-      "Type": 0,
-      "OrderNbr": "NSOPP6764",
-      "Start": "2023-03-07T08:00:00.0297191-05:00",
-      "End": "2023-03-09T18:02:08.0307181-05:00",
-      "Completed": false
-    },
-    "ContactInfo": {
-      "Organisation": "Cégep de Granby",
-      "Name": "Stéphanie Santerre",
-      "Title": "Technicienne en travaux pratiques",
-      "Email": "ssanterre@cegepgranby.qc.ca",
-      "Phone": "450-372-6614, poste 1363",
-      "Website": "https://cegepgranby.ca/",
-      "Address": {
-        "Street": "235 Rue Saint-Jacques",
-        "City": "Granby",
-        "Province": 10,
-        "Country": "Canada",
-        "Code": "J2G 3N1"
-      }
-    },
-    "Products": [
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      }
-    ],
-    "TrainedStaff": [
-      "John"
-    ],
-    "Notes": {
-      "Comments": "",
-      "Issues": "",
-      "Feedback": ""
-    }
-  }
-  const cranby = {
-    "Document": {
-      "Date": "2023-03-01T21:00:00",
-      "Language": 2
-    },
-    "Job": {
-      "Type": 0,
-      "OrderNbr": "NSOPP6764",
-      "Start": "2023-03-07T08:00:00.0297191-05:00",
-      "End": "2023-03-09T18:02:08.0307181-05:00",
-      "Completed": false
-    },
-    "ContactInfo": {
-      "Organisation": "Cégep de Granby",
-      "Name": "Stéphanie Santerre",
-      "Title": "Technicienne en travaux pratiques",
-      "Email": "ssanterre@cegepgranby.qc.ca",
-      "Phone": "450-372-6614, poste 1363",
-      "Website": "https://cegepgranby.ca/",
-      "Address": {
-        "Street": "235 Rue Saint-Jacques",
-        "City": "Granby",
-        "Province": 10,
-        "Country": "Canada",
-        "Code": "J2G 3N1"
-      }
-    },
-    "Products": [
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      },
-      {
-        "Source": 0,
-        "Code": "",
-        "Description": "",
-        "Quantity": 0.0,
-        "Serials": [],
-        "Trained": false
-      }
-    ],
-    "TrainedStaff": [
-      "John"
-    ],
-    "Notes": {
-      "Comments": "",
-      "Issues": "",
-      "Feedback": ""
-    }
-  }
-  const currentAccesses = {
-    "Users": [
-      {
-        "Id": "A4fQrSN1OaNsTBP966dRGPM31ZX2",
-        "Access": {
-          "Permission": 2,
-          "ReportIds": []
-        }
-      },
-      {
-        "Id": "GjicU8Ixl7b3GGV9Tn1nEyyKtD03",
-        "Access": {
-          "Permission": 1,
-          "ReportIds": []
-        }
-      },
-      {
-        "Id": "b9qSXlPWDhYnoXRKGq1qv34arEM2",
-        "Access": {
-          "Permission": 1,
-          "ReportIds": []
-        }
-      },
-      {
-        "Id": "6r1rEItvtog8uA04TVQmieQ3CnC2",
-        "Access": {
-          "Permission": 1,
-          "ReportIds": [
-            "7AJmtUU3ypXSlNhqYVch"
-          ]
-        }
-      },
-      {
-        "Id": "7DsUGuz3rOhDkxStsZ8pbeu1mvB3",
-        "Access": {
-          "Permission": 1,
-          "ReportIds": [
-            "Ll62xGQgTNfODmdwWBse"
-          ]
-        }
-      },
-      {
-        "Id": "0vN2c6B9pzgnKa3bYeP7nbVjjyf2",
-        "Access": {
-          "Permission": 1,
-          "ReportIds": [
-            "P9uiMYRAPjXZziB4f9hq"
-          ]
-        }
-      },
-      {
-        "Id": "aVDNLVQRVVVqHnMFaNcroIkR7ft1",
-        "Access": {
-          "Permission": 1,
-          "ReportIds": [
-            "H1nWYmk8CgzRtxp1vt6p"
-          ]
-        }
-      }
-    ]
-  };
 }
 main();
