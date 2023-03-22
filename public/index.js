@@ -242,6 +242,7 @@ async function main() {
     var contactAddress = contactInfo.Address;
     var businessName = contactInfo.Organisation;
     var summaryClone = clone.getElementsByTagName('summary')[0];
+    const workers = ['Sean Glover', 'John Bird', 'Joel Krikorian', 'Rick Enright', 'Roberto'];
 
     businessName = businessName.replace(/\s{2,}/g, ' ').trim();
     summaryClone.innerHTML = businessName;
@@ -253,41 +254,9 @@ async function main() {
 
       var signedBy = clone.querySelector('#clientSignature');
       if(signedBy.value != null && signedBy.value.length > 0) {
-        var dict = {};      
-        var rows = clone.querySelector("#starsByCategory").querySelectorAll("tr");
-        for (var rw = 0; rw < rows.length; rw++) {
-          var sumStars = 0;
-          var row20 = rows[rw];
-          var stars = row20.querySelectorAll("img");
-          for (var str = 0; str < stars.length; str++) {
-            var star = stars[str];
-            var ehf = star.getAttribute('src').split('/')[1].split('.')[0].replace('star', '');
-            var starValue = ehf == 'Fill' ? 1 : ehf == 'Half' ? .5 : 0;
-            sumStars += starValue;
-          }
-          var catId = null;
-          if(row20.querySelector('input') == null) {
-            catId = row20.querySelector('td').id;
-          }
-          else {
-            catId = row20.querySelector('input').value.trim();
-            if(catId == '') { catId = 'starsClient'}
-          }
-          dict[catId] = sumStars;
-        }
-
-        const feedback = {
-          "ClientResponse": {
-            "Submitter": clone.querySelector("#clientSignature").value,
-            "Date": new Date(),
-            "Submited": true,
-            "Feedback": {
-              "stars": dict,
-              "comments": clone.querySelector("#clientComments").value
-            }
-          }
+        var feedback = {
+          "ClientResponse": getClientResponse(clone)
         };
-
         // updating the database so turn off so page won't reset
         unsubscribeReportIteration();
         const destDoc = doc(db, 'reports', queryDoc.id);
@@ -310,9 +279,8 @@ async function main() {
 
     });
 
-    var docDate = new Date(jobDoc.Date.seconds * 1000);
-    
-    var efs = jobDoc.Language; // English|French|Spanish
+    // English[1]|Français[2]|Español[3]|Italiano[4]|Deutsch[5]
+    var efs = isNaN(jobDoc.Language) ? getLanguage(jobDoc.Language) : jobDoc.Language;
     setLanguage(efs);
 
     clone.querySelectorAll('.row-language').forEach((row)=>{
@@ -322,7 +290,7 @@ async function main() {
         var rowClicked = e.target;
         var dropdown = rowClicked.closest('.dropdown');
         var dropBtn = dropdown.children[0];
-        var efsClicked = rowClicked.innerText == 'English' ? 1 : rowClicked.innerText == 'Français' ? 2 : rowClicked.innerText == 'Español' ? 3 : rowClicked.innerText == 'Italiano' ? 4 : rowClicked.innerText == 'Deutsch' ? 5 : 0;
+        var efsClicked = getLanguage(rowClicked.innerText);
         var selectedP = dropBtn.children[1];
         selectedP.innerText = rowClicked.innerText;
         setLanguage(efsClicked);
@@ -337,22 +305,36 @@ async function main() {
       document.querySelector('#signout').innerText = efs == 1 ? 'Sign out' : efs == 2 ? 'Fermer session' : 'Cerrar sesión';
       
       document.querySelector('#div_updateJSON').addEventListener('click', function() {
-        
-        var workers = ['Sean Glover', 'John Bird', 'Joel Krikorian', 'Rick Enright', 'Roberto'];
         var openDetails = getOpenDetails();
+        var dateOptions = {
+            timeZone: 'America/Montreal',
+            timeZoneName:'longOffset',
+            hourCycle: 'h23',
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          fractionalSecondDigits: 3
+        }
         openDetails.forEach(async (openDetail) => {
 
           var docName = openDetail.querySelector("#businessName").value;
+          var docLanguage = openDetail.querySelector("#languagePref").innerText;
+          docLanguage = isNaN(docLanguage) ? docLanguage : getLanguage(docLanguage); // ensure goes as an int
+          console.log(`language index = ${efs} --> ${docLanguage} (${businessName} )`);
+
           const emptyReport = {
             "Document": {
-              "Date": new Date(openDetail.querySelector("#documentDate").value),
-              "Language": openDetail.querySelector("#languagePref").getAttribute('innerText')
+              "Date": localDate(openDetail.querySelector("#documentDate")),
+              "Language": getLanguage(docLanguage)
             },
             "Job": {
               "Type": openDetail.querySelector("#jobTypes").selectedIndex,
               "OrderNbr": openDetail.querySelector('#purchaseOrder').value,
-              "Start": new Date(openDetail.querySelector("#startDate").value),
-              "End": new Date(openDetail.querySelector("#endDate").value),
+              "Start": localDate(openDetail.querySelector("#startDate")),
+              "End": localDate(openDetail.querySelector("#endDate")),
               "Completed": openDetail.querySelector("#checkComplete").checked,
               "SiteAssociate": workers[openDetail.querySelector("#installers").selectedIndex - 1]
             },
@@ -395,8 +377,8 @@ async function main() {
             "Notes": {
               "Comments": openDetail.querySelector("#comments").value,
               "Issues": openDetail.querySelector("#issues").value,
-              "Feedback": ""
-            }
+            },
+            "ClientResponse": getClientResponse(openDetail)
           }
           // downloadJSON(emptyReport, docName);
           const destDoc = doc(db, 'reports', openDetail.id);
@@ -421,9 +403,12 @@ async function main() {
         var rowImg = row.children[0].children[0];
         rowImg.setAttribute('src', getFlagURL(flagIndex++, flagStyle))
       });
+
+      // console.log(`language index = ${efs} --> ${getLanguage(efs)} (${businessName} )`);
+
       clone.querySelector("#languageIcon").setAttribute('src', getFlagURL(efs, flagStyle));
       clone.querySelector("#languageLabel").innerText = efs == 1 ? 'Document language' : efs == 2 ? 'Langue du document' : 'Idioma del documento';
-      clone.querySelector("#languagePref").innerText = efs == 1 ? 'English' : efs == 2 ? 'Français' : 'Español';
+      clone.querySelector("#languagePref").innerText = getLanguage(efs);
       clone.querySelector('#businessNameLabel').innerText = efs == 1 ? 'Business name' : efs == 2 ? 'Compagnie' : 'Empresa';
       clone.querySelector('#purchaseOrderLabel').innerText = efs == 1 ? 'Purchase order' : efs == 2 ? 'Bon de commande' : 'Orden de compra';
       clone.querySelector('#documentDateLabel').innerText = efs == 1 ? 'Document date' : efs == 2 ? 'Date de document' : 'Fecha del documento';
@@ -499,13 +484,22 @@ async function main() {
       }
 
     }
+    function getLanguage(indexOrName) {
+      if(isNaN(indexOrName)) {
+        return indexOrName == 'English' ? 1 : indexOrName == 'Français' ? 2 : indexOrName == 'Español' ? 3 : indexOrName == 'Italiano' ? 4 : indexOrName == 'Deutsch' ? 5 : 0;
+      }
+      else {
+        return indexOrName == 1 ? 'English' : indexOrName == 2 ? 'Français' : indexOrName == 3 ? 'Español' : indexOrName == 4 ? 'Italiano' : indexOrName == 5 ? 'Deutsch' : 'English';
+      }
+    }
 
     clone.querySelector("#businessName").setAttribute("value", businessName);
     clone.querySelector("#purchaseOrder").setAttribute("value", job.OrderNbr);
-    clone.querySelector("#documentDate").setAttribute("value", formatDate(docDate));
+    clone.querySelector("#documentDate").setAttribute("value", formatDate(new Date(jobDoc.Date.seconds * 1000)));
     clone.querySelector("#addressStreet").setAttribute("value", contactAddress.Street);
     clone.querySelector("#addressCity").setAttribute("value", contactAddress.City);
     clone.querySelector("#addressPostalCode").setAttribute("value", contactAddress.Code);
+    optionSet(clone.querySelector("#installers"), workers.indexOf(job.SiteAssociate));
     
     // 0   1   2   3   4   5   6   7   8   9   10  11  12
     // AB, BC, MB, NB, NL, NT, NS, NU, ON, PE, QC, SK, YK
@@ -821,6 +815,42 @@ async function main() {
     downloadAnchorNode.remove();
 
   }
+  function getClientResponse(rootElement) {
+
+    var dict = {};      
+    var rows = rootElement.querySelector("#starsByCategory").querySelectorAll("tr");
+    for (var rw = 0; rw < rows.length; rw++) {
+      var sumStars = 0;
+      var row20 = rows[rw];
+      var stars = row20.querySelectorAll("img");
+      for (var str = 0; str < stars.length; str++) {
+        var star = stars[str];
+        var ehf = star.getAttribute('src').split('/')[1].split('.')[0].replace('star', '');
+        var starValue = ehf == 'Fill' ? 1 : ehf == 'Half' ? .5 : 0;
+        sumStars += starValue;
+      }
+      var catId = null;
+      if(row20.querySelector('input') == null) {
+        catId = row20.querySelector('td').id;
+      }
+      else {
+        catId = row20.querySelector('input').value.trim();
+        if(catId == '') { catId = 'starsClient'}
+      }
+      dict[catId] = sumStars;
+    }
+    const clientResponse = {
+      "Submitter": rootElement.querySelector("#clientSignature").value,
+      "Date": localDate(rootElement.querySelector("#signDate")),
+      "Submited": true,
+      "Feedback": {
+        "stars": dict,
+        "comments": rootElement.querySelector("#clientComments").value
+      }
+    };
+    return clientResponse;
+
+  }
 
   //#region JSON dateParse
   // https://weblog.west-wind.com/posts/2014/jan/06/javascript-json-date-parsing-and-real-dates
@@ -862,6 +892,22 @@ async function main() {
         day = '0' + day;
 
     return [year, month, day].join('-');
+  }
+  function addMinutes(date, minutes) {
+    
+    date.setMinutes(date.getMinutes() + minutes);
+    return date;
+
+  }
+  function localDate(dateElement) {
+
+    /// what a pain! getTimeOffset() MUST use the date in question as it changes with DST
+    /// example: 02/28/2023 was +5 but 03/12/2023 was +4
+    /// so setting a retro datetime must use the date offset of that date and not a current date
+    var elementDate = new Date(dateElement.value);
+    var montrealOffsetMinutes = elementDate.getTimezoneOffset();
+    return addMinutes(elementDate, montrealOffsetMinutes);
+
   }
   function createGUID() {
     return('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
