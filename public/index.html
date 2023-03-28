@@ -95,6 +95,27 @@
           </tr>
         </table>
       </div>
+
+      <!-- Modal -->
+      <div class="modal fade" id="popup" tabindex="-1" role="dialog" aria-labelledby="popupLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="popupLabel">Modal title</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              ...
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-primary">Save changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
          
       <section id="sectionReports" style="display: none;">
         <div class="row" style="padding: 0px 0px 0px 0px; margin: 0px;">
@@ -326,63 +347,71 @@
                 </div>
               </div>
         
-              <li class="flex-fill list-group-item" id="serialsLabel" style="text-align: center; background-color: #4267B2; color: white; margin: 0px 0px 0px 0px;">Serialized products</li>
+              <div class="flex-fill list-group-item" id="serialsLabel" style="text-align: center; background-color: #4267B2; color: white; margin: 0px 0px 0px 0px;">
+                Serialized products
+                <button id="serials_csvUpload">
+                  <i class="bi bi-cloud-upload"></i>
+                  Upload serials .csv file
+                </button>
+                <input class='file' id="serials-choose" style="display: none;" type="file" multiple/>
+              </div>
+
               <ul class="list-group list-group-horizontal" style="margin: 1px;">
-                <li class="flex-fill list-group-item" id="r1c1_serial"></li>
-                <li class="flex-fill list-group-item" id="r1c2_serial"></li>
-                <li class="flex-fill list-group-item" id="r1c3_serial"></li>
+                <input class="flex-fill list-group-item" id="r1c1_serial"></input>
+                <input class="flex-fill list-group-item" id="r1c2_serial"></input>
+                <input class="flex-fill list-group-item" id="r1c3_serial"></input>
               </ul>
               <ul class="list-group list-group-horizontal" style="margin: 1px;">
-                <li class="flex-fill list-group-item" id="r2c1_serial"></li>
-                <li class="flex-fill list-group-item" id="r2c2_serial"></li>
-                <li class="flex-fill list-group-item" id="r2c3_serial"></li>
+                <input class="flex-fill list-group-item" id="r2c1_serial"></input>
+                <input class="flex-fill list-group-item" id="r2c2_serial"></input>
+                <input class="flex-fill list-group-item" id="r2c3_serial"></input>
               </ul>
               <ul class="list-group list-group-horizontal" style="margin: 1px;">
-                <li class="flex-fill list-group-item" id="r3c1_serial"></li>
-                <li class="flex-fill list-group-item" id="r3c2_serial"></li>
-                <li class="flex-fill list-group-item" id="r3c3_serial"></li>
+                <input class="flex-fill list-group-item" id="r3c1_serial"></input>
+                <input class="flex-fill list-group-item" id="r3c2_serial"></input>
+                <input class="flex-fill list-group-item" id="r3c3_serial"></input>
               </ul>
               <ul class="list-group list-group-horizontal" style="margin: 1px;">
-                <li class="flex-fill list-group-item" id="r4c1_serial"></li>
-                <li class="flex-fill list-group-item" id="r4c2_serial"></li>
-                <li class="flex-fill list-group-item" id="r4c3_serial"></li>
+                <input class="flex-fill list-group-item" id="r4c1_serial"></input>
+                <input class="flex-fill list-group-item" id="r4c2_serial"></input>
+                <input class="flex-fill list-group-item" id="r4c3_serial"></input>
               </ul>
               <ul class="list-group list-group-horizontal" style="margin: 1px;">
-                <li class="flex-fill list-group-item" id="r5c1_serial"></li>
-                <li class="flex-fill list-group-item" id="r5c2_serial"></li>
-                <li class="flex-fill list-group-item" id="r5c3_serial"></li>
+                <input class="flex-fill list-group-item" id="r5c1_serial"></input>
+                <input class="flex-fill list-group-item" id="r5c2_serial"></input>
+                <input class="flex-fill list-group-item" id="r5c3_serial"></input>
               </ul>
               <li class="flex-fill list-group-item" id="trainedProductsLabel" style="text-align: center; background-color: #dcdcdc; color: black; margin: 0px 0px 0px 0px;">Trained products</li>
               <ul class="list-group list-group-horizontal" style="margin: 1px;">
-                <li class="flex-fill list-group-item" id="r1c1_trained"></li>
-                <li class="flex-fill list-group-item" id="r1c2_trained"></li>
-                <li class="flex-fill list-group-item" id="r1c3_trained"></li>
+                <input class="flex-fill list-group-item" id="r1c1_trained"></input>
+                <input class="flex-fill list-group-item" id="r1c2_trained"></input>
+                <input class="flex-fill list-group-item" id="r1c3_trained"></input>
               </ul>
               <ul class="list-group list-group-horizontal" style="margin: 1px;">
-                <li class="flex-fill list-group-item" id="r2c1_trained"></li>
-                <li class="flex-fill list-group-item" id="r2c2_trained"></li>
-                <li class="flex-fill list-group-item" id="r2c3_trained"></li>
+                <input class="flex-fill list-group-item" id="r2c1_trained"></input>
+                <input class="flex-fill list-group-item" id="r2c2_trained"></input>
+                <input class="flex-fill list-group-item" id="r2c3_trained"></input>
               </ul>
               <ul class="list-group list-group-horizontal" style="margin: 1px;">
-                <li class="flex-fill list-group-item" id="r3c1_trained"></li>
-                <li class="flex-fill list-group-item" id="r3c2_trained"></li>
-                <li class="flex-fill list-group-item" id="r3c3_trained"></li>
+                <input class="flex-fill list-group-item" id="r3c1_trained"></input>
+                <input class="flex-fill list-group-item" id="r3c2_trained"></input>
+                <input class="flex-fill list-group-item" id="r3c3_trained"></input>
               </ul>
               <ul class="list-group list-group-horizontal" style="margin: 1px;">
-                <li class="flex-fill list-group-item" id="r4c1_trained"></li>
-                <li class="flex-fill list-group-item" id="r4c2_trained"></li>
-                <li class="flex-fill list-group-item" id="r4c3_trained"></li>
+                <input class="flex-fill list-group-item" id="r4c1_trained"></input>
+                <input class="flex-fill list-group-item" id="r4c2_trained"></input>
+                <input class="flex-fill list-group-item" id="r4c3_trained"></input>
               </ul>
               <ul class="list-group list-group-horizontal" style="margin: 1px;">
-                <li class="flex-fill list-group-item" id="r5c1_trained"></li>
-                <li class="flex-fill list-group-item" id="r5c2_trained"></li>
-                <li class="flex-fill list-group-item" id="r5c3_trained"></li>
+                <input class="flex-fill list-group-item" id="r5c1_trained"></input>
+                <input class="flex-fill list-group-item" id="r5c2_trained"></input>
+                <input class="flex-fill list-group-item" id="r5c3_trained"></input>
               </ul>
                 <!-- trained staff names - comma separated -->
               <li class="flex-fill list-group-item" id="trainedStaffLabel" style="text-align: center; background-color: #E6E6FA; color: black; margin: 0px 0px 0px 0px;">Trained staff
               </li>
               <ul class="list-group list-group-horizontal" style="margin: 1px;">
-                <li class="flex-fill list-group-item" id="r1c1_trainedStaff" style="min-height: 40px;">monkey</li>
+                <input class="flex-fill list-group-item" id="r1c1_trainedStaff" style="min-height: 40px;"></input>
               </ul>
 
               <div class="form-floating" style="padding: 3px; margin-top: 10px;">
@@ -725,5 +754,6 @@
         document.getElementById('thankYouMessage').style.display = "block";
       }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.1/papaparse.min.js"></script>
   </body>
 </html>

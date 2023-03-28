@@ -411,12 +411,12 @@ async function main() {
       clone.querySelector("#languagePref").innerText = getLanguage(efs);
       clone.querySelector('#businessNameLabel').innerText = efs == 1 ? 'Business name' : efs == 2 ? 'Compagnie' : 'Empresa';
       clone.querySelector('#purchaseOrderLabel').innerText = efs == 1 ? 'Purchase order' : efs == 2 ? 'Bon de commande' : 'Orden de compra';
-      clone.querySelector('#documentDateLabel').innerText = efs == 1 ? 'Document date' : efs == 2 ? 'Date de document' : 'Fecha del documento';
+      clone.querySelector('#documentDateLabel').innerText = efs == 1 ? 'Document date' : efs == 2 ? 'Date de création du document' : 'Fecha del documento';
       clone.querySelector('#addressStreetLabel').innerText = efs == 1 ? 'Street' : efs == 2 ? 'Rue' : 'Calle';
       clone.querySelector('#addressProvinceLabel').innerText = efs == 3 ? 'Estado' :'Province';
       clone.querySelector('#addressCityLabel').innerText = efs == 1 ? 'City' : efs == 2 ? 'Ville' : 'Ciudad';
       clone.querySelector('#addressPostalCodeLabel').innerText = efs == 1 ? 'Postal code' : efs == 2 ? 'Code postale' : 'Código postal';
-      clone.querySelector('#contactNameLabel').innerText = efs == 1 ? 'Contact name' : efs == 2 ? 'Nom de contact' : 'Contacto';
+      clone.querySelector('#contactNameLabel').innerText = efs == 1 ? 'Contact name' : efs == 2 ? 'Nom du contact' : 'Contacto';
       clone.querySelector('#contactTitleLabel').innerText = efs == 1 ? 'Contact title' : efs == 2 ? 'Titre' : 'Título';
       clone.querySelector("#contactTitle").value = efs == 1 ? 'Program and services coordinator' : efs == 2 ? 'Coordonnateur/rice des programmes et services' : 'Coordinador(a) de programas y servicios';;
       clone.querySelector('#contactEmailLabel').innerText = efs == 1 ? 'Contact email' : efs == 2 ? 'Courriel' : 'Correo';
@@ -437,15 +437,36 @@ async function main() {
       clone.querySelector('#checkCompleteLabel').value = efs == 1 ? 'Completed' : efs == 2 ? 'Completé' : 'completo';
       clone.querySelector('#startDateLabel').innerText = efs == 1 ? 'Start' : efs == 2 ? 'Début' : 'Empezo';
       clone.querySelector('#endDateLabel').innerText = efs == 1 ? 'End' : efs == 2 ? 'Fin' : 'Fin';
-      clone.querySelector('#serialsLabel').innerText = efs == 1 ? 'Serialized products' : efs == 2 ? 'Produits sérialisés' : 'Productos serializados';
+      clone.querySelector('#serialsLabel').value = efs == 1 ? 'Serialized products' : efs == 2 ? 'Produits sérialisés' : 'Productos serializados';
+      var serialFileSelector = clone.querySelector('#serials-choose');
+      serialFileSelector.addEventListener('change', async function() {
+
+        var csvFile = serialFileSelector.files[0];
+        if(csvFile == null) return;
+        var fileType = fileNameType(csvFile);
+        if(fileType[1] == 'csv') {
+          var csvTable = await csvFileTable(csvFile);
+          delay(1);
+          const rowIndex = 1;
+          const colIndex = 2;
+          const headers = csvTable[0];
+          const cellValue = csvTable[rowIndex][headers[colIndex]];
+          console.log(`${new Date()} --> ${cellValue}`);      
+        }
+        serialFileSelector.value = "";
+
+      });
+      clone.querySelector('#serials_csvUpload').addEventListener('click', function() {
+        serialFileSelector.click();
+      });
       clone.querySelector('#trainedProductsLabel').innerText = efs == 1 ? 'Trained products' : efs == 2 ? 'Produits formés' : 'Productos entrenados';
-      clone.querySelector('#trainedStaffLabel').innerText = efs == 1 ? 'Trained staff' : efs == 2 ? 'Personel formé' : 'Personal capacitado';
+      clone.querySelector('#trainedStaffLabel').innerText = efs == 1 ? 'Trained staff' : efs == 2 ? 'Personnel formé' : 'Personal capacitado';
       clone.querySelector('#commentsLabel').innerText = (efs == 1 ? 'Comments' : efs == 2 ? 'Commentaires' : 'Commentarios') + ' (Flaghouse)';
       clone.querySelector('#issuesLabel').innerText = efs == 1 ? 'Issues' : efs == 2 ? 'Problèmes' : 'Problemas';
       clone.querySelector('#clientCommentsLabel').innerText = efs == 1 ? 'Client comments' : efs == 2 ? 'Commentaires (client)' : 'Commentarios (cliente)';
       clone.querySelector('#clientSignatureLabel').innerText = efs == 1 ? 'Client signature' : efs == 2 ? 'Signature du client' : 'Firma cliente';
       clone.querySelector('#clientSignature').placeholder = efs == 1 ? 'Type your name' : efs == 2 ? 'Écrivez votre nom' : 'Escribir su nombre';
-      clone.querySelector('#signDateLabel').innerText = efs == 1 ? 'Dated' : efs == 2 ? 'Daté' : 'Fechado';
+      clone.querySelector('#signDateLabel').innerText = efs == 1 ? 'Dated' : efs == 2 ? 'Date' : 'Fechado';
       //Stars
       clone.querySelector('#starsOverall').innerText = efs == 1 ? 'Overall rating' : efs == 2 ? 'Évaluation globale' : 'Valoración general';
       clone.querySelector('#starsProfessional').innerText = efs == 1 ? 'Installer professional' : efs == 2 ? 'Professionnalisme de l’installateur' : 'X del instalador';
@@ -596,7 +617,7 @@ async function main() {
         colNbr = 1; rowNbr++;
       }
       var productSerials = product.Serials.join(',');
-      var serialText = '<strong>' + (product.Serials.length == 1 ? 'serial# ' + product.Serials[0] : `serials: [${productSerials}]`) + '</strong>';
+      var serialText = '' + (product.Serials.length == 1 ? 'serial# ' + product.Serials[0] : `serials: [${productSerials}]`) + ''; // <strong> </strong>
       var cellText = `${product.Code} ${product.Description} ${serialText}`.trim();
       rxcySetCellText(clone, rc, cellText);
     };
@@ -937,11 +958,12 @@ async function main() {
   }
   function rxcySetCellText(clonedReport, rxcy, text) {
 
-    var guidId = `${rxcy}_${createGUID()}`;
+    // var guidId = `${rxcy}_${createGUID()}`;
     var docCell = clonedReport.querySelector("#" + rxcy);
     if(docCell != null) {
-      docCell.setAttribute('id', guidId);
-      docCell.innerHTML = text;
+      // docCell.setAttribute('id', guidId);
+      docCell.value = text;
+      docCell.innerText = text;
     }
 
   }
@@ -986,6 +1008,49 @@ async function main() {
       //reader.readAsArrayBuffer(file);
       reader.readAsText(file);
     })
+
+  }
+  async function csvFileTable(csvFile) {
+
+    Array.prototype.max = function() {
+      return Math.max.apply(null, this);
+    };
+    Array.prototype.min = function() {
+      return Math.min.apply(null, this);
+    };
+    /// row[0] --> headers as Dictionary<int, string>
+    /// rows[1+} --> row data as Dictionary<string, string> {colName, cellValue}
+    const table = {};
+    const headers = {};
+    // Papa.parse is awaitable
+    await Papa.parse(csvFile, {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      complete: function(results) {
+
+        var rowIndex = 0;
+        let rows = Array.from(results.data);
+        let rowMax = [100, rows.length];
+        
+        for(rowIndex = 1; rowIndex <= rowMax.min(); rowIndex++) {
+
+          var cells = {};
+          var row = rows[rowIndex - 1];
+          var rowHdrs = Array.from(Object.keys(row));
+          for(var colIndex = 0; colIndex < rowHdrs.length; colIndex++) {
+            var colName = rowHdrs[colIndex];
+            cells[colName] = row[colName];
+            if(rowIndex == 1) { headers[colIndex] = colName; }
+          }
+          table[rowIndex] = cells;
+        }
+        if(rowIndex != 0) { table[0] = headers }
+
+      }
+    });
+    await delay(1);
+    return table;
 
   }
   async function uploadFile(file, id) {
@@ -1113,16 +1178,19 @@ async function main() {
       )
     })
   }
+  function fileNameType(file_Or_filename) {
 
-  // misc firestore
-  function fileNameType(fileName) {
+    var filename = file_Or_filename instanceof File ? file_Or_filename.name : file_Or_filename;
     var nameType = [];
-    var fileDots = fileName.split('.');
+    var fileDots = filename.split('.');
     var fileType = fileDots[fileDots.length - 1].toLowerCase();
     nameType.push(fileDots.slice(0, fileDots.length - 1).join('.'));
     nameType.push(fileType);
     return nameType;
+
   }
+
+  // misc firestore
   async function copyFirestore() {
 
     /////////////// from query -> doc ??
