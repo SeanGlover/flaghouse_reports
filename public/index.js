@@ -41,7 +41,7 @@ import {
   uploadBytesResumable
 } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-storage.js';
 
-import data_json from './data.json' assert { type: 'json' };
+// import data_json from './data.json' assert { type: 'json' };
 // console.log(data);
 
 const auth = getAuth(app);
