@@ -154,15 +154,13 @@ async function main() {
   async function initialReportsLoad() {
 
     resetSectionReports();
-    let accessByUser = [];
-    const access = query(collection(db, 'access'));
+    let accessByUser = {};
+    const access = query(collection(db, 'users'));
     const accessSnapshot = await getDocs(access);
     accessSnapshot.forEach((doc) => {
       var docData = doc.data();
-      var users = docData.Users;
-      for (var u = 0; u < users.length; u++) {
-        var user = users[u];
-        accessByUser[user.Id] = user.Access;
+      for (const [key, value] of Object.entries(docData)) {
+        accessByUser[key] = value.Access;
       }
     });
 
@@ -261,7 +259,7 @@ async function main() {
         unsubscribeReportIteration();
         const destDoc = doc(db, 'reports', queryDoc.id);
         setDoc(destDoc, feedback, { merge:true })
-        .then(destDoc => {
+        .then(lambda => {
             console.log(`Document updated successfully`);
             submitBtn.style = 'background-color: #32CD32; padding: 10px 30px 10px 30px;';
         })
@@ -383,11 +381,10 @@ async function main() {
           // downloadJSON(emptyReport, docName);
           const destDoc = doc(db, 'reports', openDetail.id);
           await setDoc(destDoc, emptyReport, { merge:false })
-          .then(destDoc => {
-
+          .then(lambda => {
           })
           .catch(error => {
-
+            console.log(error);
           })
           location.reload();
           openDetail.open = true;
@@ -418,7 +415,7 @@ async function main() {
       clone.querySelector('#addressPostalCodeLabel').innerText = efs == 1 ? 'Postal code' : efs == 2 ? 'Code postale' : 'Código postal';
       clone.querySelector('#contactNameLabel').innerText = efs == 1 ? 'Contact name' : efs == 2 ? 'Nom du contact' : 'Contacto';
       clone.querySelector('#contactTitleLabel').innerText = efs == 1 ? 'Contact title' : efs == 2 ? 'Titre' : 'Título';
-      clone.querySelector("#contactTitle").value = efs == 1 ? 'Program and services coordinator' : efs == 2 ? 'Coordonnateur/rice des programmes et services' : 'Coordinador(a) de programas y servicios';;
+      clone.querySelector("#contactTitle").value = contactInfo.Title ?? (efs == 1 ? 'Program and services coordinator' : efs == 2 ? 'Coordonnateur/rice des programmes et services' : 'Coordinador(a) de programas y servicios');
       clone.querySelector('#contactEmailLabel').innerText = efs == 1 ? 'Contact email' : efs == 2 ? 'Courriel' : 'Correo';
       var jobTypeOptions = clone.querySelector('#jobTypes');
       if(efs == 1) {
@@ -447,11 +444,55 @@ async function main() {
         if(fileType[1] == 'csv') {
           var csvTable = await csvFileTable(csvFile);
           delay(1);
-          const rowIndex = 1;
-          const colIndex = 2;
-          const headers = csvTable[0];
-          const cellValue = csvTable[rowIndex][headers[colIndex]];
-          console.log(`${new Date()} --> ${cellValue}`);      
+          var rowNumbers = Object.keys(csvTable);
+          // first create a dictionary by code
+          var codes = {};
+          for(var rw = 1; rw < rowNumbers.length; rw++) {
+            var row = csvTable[rw];
+            var code = (row["code"] ?? "").trim();
+            if(!(code in codes)) { codes[code] = []; }
+            codes[code].push(row);
+          }
+
+          const csvProducts = [];
+          for (const [code, rows] of Object.entries(codes)) {
+            var qty = 0;
+            var desc = "";
+            var serials = [];
+            var trained = false;
+            rows.forEach(row => {
+              Array.from((row["serials"] ?? '').toString().split(',')).forEach(serial => {
+                if(serial.trim() != '') {
+                  serials.push(serial.trim());
+                }
+              });
+              var rowQty = parseInt(row["qty"] ?? "0");
+              if(!isNaN(rowQty)) {
+                qty += parseInt(rowQty);
+              }
+              desc = row["description"] ?? "";
+              trained = (row["trained"] ?? '').toLowerCase() == 'y';
+            });
+            var csvProduct = {
+              "Source": 0,
+              "Code": code,
+              "Description": desc,
+              "Quantity": serials.length > qty ? serials.length : qty,
+              "Serials": serials,
+              "Trained": trained
+            };
+            csvProducts.push(csvProduct);
+          }
+          // updating the database so turn off so page won't reset
+          unsubscribeReportIteration();
+          const destDoc = doc(db, 'reports', queryDoc.id);
+          setDoc(destDoc, {"Products": csvProducts}, {merge:true})
+          .then(lambda => {
+              console.log(`Document updated successfully`);
+          })
+          .catch(error => {
+              console.log(error);
+          })
         }
         serialFileSelector.value = "";
 
@@ -619,6 +660,7 @@ async function main() {
       var productSerials = product.Serials.join(',');
       var serialText = '' + (product.Serials.length == 1 ? 'serial# ' + product.Serials[0] : `serials: [${productSerials}]`) + ''; // <strong> </strong>
       var cellText = `${product.Code} ${product.Description} ${serialText}`.trim();
+      // console.log(`${businessName}, ${cellText}`);
       rxcySetCellText(clone, rc, cellText);
     };
     // ... in the trained section (products), show only products marked as Trained: true
@@ -1200,7 +1242,7 @@ async function main() {
     querySnapshot.forEach((srcDoc) => {
       console.log(srcDoc.id, ' => ', srcDoc.data());
       setDoc(destDoc, srcDoc.data(), { merge:true })
-      .then(destDoc => {
+      .then(lambda => {
           console.log(`Document copied successfully`);
       })
       .catch(error => {
@@ -1213,8 +1255,8 @@ async function main() {
 
     var response = [];
     const destDoc = doc(db, 'reports', reportId);
-    var request = await setDoc(destDoc, reportJSON, { merge:true })
-    .then(destDoc => {
+    await setDoc(destDoc, reportJSON, { merge:true })
+    .then(lambda => {
       response.push(true);
       response.push(reportJSON);
     })
@@ -1230,7 +1272,7 @@ async function main() {
     var response = [];
     const destDoc = doc(db, 'access', 'b9NbHHku509AEMHjF6Kw'); // update
     var request = await setDoc(destDoc, latestUserList, { merge:true })
-    .then(destDoc => {
+    .then(lambda => {
       response.push(true);
       response.push(latestUserList);
     })
